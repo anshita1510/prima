@@ -1,0 +1,22 @@
+# Node
+node_modules/
+**/node_modules/
+
+# Build
+.next/
+dist/
+build/
+
+# Env
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+.git_corrupted_backup/
+.git_corrupted_backup/

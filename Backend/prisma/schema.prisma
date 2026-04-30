@@ -1,0 +1,763 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Permission {
+  id          Int              @id @default(autoincrement())
+  code        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+  role         Role
+  permissionId Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([role, permissionId])
+}
+
+model Company {
+  id                 Int                @id @default(autoincrement())
+  name               String             @unique
+  code               String             @unique
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  industry           String?
+  plan               Plan               @default(TRIAL)
+  description        String?
+  technology         String?
+  attendances        Attendance[]
+  attendancePolicies AttendancePolicy[]
+  departments        Department[]
+  employees          Employee[]
+  projects           Project[]
+  users              User[]
+  workShifts         WorkShift[]
+}
+
+model User {
+  id                   Int          @id @default(autoincrement())
+  email                String       @unique
+  firstName            String
+  lastName             String
+  designation          String
+  role                 Role
+  status               Status       @default(PENDING)
+  password             String?
+  isActive             Boolean      @default(false)
+  inviteToken          String?      @unique
+  inviteExpiry         DateTime?
+  companyId            Int?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  otp                  String?
+  otpExpiry            DateTime?
+  tempPassword         String?
+  phone                String
+  resetOtp             String?
+  resetOtpExpiry       DateTime?
+  passwordResetAllowed Boolean      @default(false)
+  authProvider         AuthProvider @default(LOCAL)
+  googleId             String?      @unique
+  microsoftId          String?      @unique
+  githubId             String?      @unique
+  ceoId                String?      @unique
+  isVerified           Boolean      @default(false)
+  verificationToken    String?      @unique
+  employee             Employee?
+  company              Company?     @relation(fields: [companyId], references: [id])
+}
+
+model Department {
+  id          Int            @id @default(autoincrement())
+  name        String
+  type        DepartmentType
+  companyId   Int
+  managerId   Int?           @unique
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  attendances Attendance[]
+  company     Company        @relation(fields: [companyId], references: [id])
+  manager     Employee?      @relation("DepartmentManager", fields: [managerId], references: [id])
+  employees   Employee[]     @relation("DepartmentEmployees")
+  leaves      Leave[]
+  projects    Project[]
+
+  @@unique([companyId, name])
+}
+
+model Employee {
+  id                      Int                        @id @default(autoincrement())
+  userId                  Int                        @unique
+  companyId               Int
+  departmentId            Int
+  name                    String
+  designation             Designation
+  employeeCode            String                     @unique
+  isActive                Boolean                    @default(true)
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @updatedAt
+  managerId               Int?
+  attendances             Attendance[]
+  attendanceAudits        AttendanceAuditEntry[]     @relation("AttendanceAuditor")
+  approvedPolicies        AttendancePolicy[]         @relation("PolicyApprover")
+  createdPolicies         AttendancePolicy[]         @relation("PolicyCreator")
+  createdAutomations      AutomationRule[]           @relation("AutomationCreator")
+  organizedEvents         CalendarEvent[]            @relation("EventOrganizer")
+  eventAttendances        CalendarEventAttendee[]    @relation("EventAttendee")
+  managedDepartment       Department?                @relation("DepartmentManager")
+  company                 Company                    @relation(fields: [companyId], references: [id])
+  department              Department                 @relation("DepartmentEmployees", fields: [departmentId], references: [id])
+  manager                 Employee?                  @relation("ReportingManager", fields: [managerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subordinates            Employee[]                 @relation("ReportingManager")
+  user                    User                       @relation(fields: [userId], references: [id])
+  approvedLeaves          Leave[]                    @relation("LeaveApprover")
+  leaves                  Leave[]
+  createdNotifications    Notification[]             @relation("NotificationCreator")
+  notifications           NotificationRecipient[]
+  policyAudits            PolicyAuditEntry[]         @relation("PolicyAuditor")
+  ownedProjects           Project[]                  @relation("ProjectOwner")
+  projectRoles            ProjectMember[]            @relation("ProjectMemberRoles")
+  generatedReports        ProjectReport[]            @relation("ReportGenerator")
+  createdTemplates        ProjectTemplate[]          @relation("TemplateCreator")
+  regularizationAudits    RegularizationAuditEntry[] @relation("RegularizationAuditor")
+  approvedRegularizations RegularizationRequest[]    @relation("RegularizationApprover")
+  regularizationRequests  RegularizationRequest[]
+  shiftAssignments        ShiftAssignment[]
+  assignedTasks           Task[]                     @relation("TaskAssignee")
+  createdTasks            Task[]                     @relation("TaskCreator")
+  attachments             TaskAttachment[]           @relation("TaskAttachments")
+  comments                TaskComment[]              @relation("CommentAuthor")
+  taskReports             TaskReport[]               @relation("TaskReporter")
+  timeEntries             TaskTimeEntry[]            @relation("TimeEntries")
+  memberProjects          Project[]                  @relation("ProjectMembers")
+}
+
+model Attendance {
+  id                     Int                     @id @default(autoincrement())
+  employeeId             Int
+  companyId              Int
+  departmentId           Int
+  date                   DateTime
+  status                 AttendanceStatus
+  checkIn                DateTime?
+  checkOut               DateTime?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  approvedAt             DateTime?
+  approvedBy             Int?
+  breakTime              Float?
+  deviceInfo             Json?
+  editReason             String?
+  editedAt               DateTime?
+  editedBy               Int?
+  isLocked               Boolean                 @default(false)
+  isManuallyEdited       Boolean                 @default(false)
+  location               Json?
+  overtime               Float?
+  requiresApproval       Boolean                 @default(false)
+  timeSlots              Json?
+  workHours              Float?
+  company                Company                 @relation(fields: [companyId], references: [id])
+  department             Department              @relation(fields: [departmentId], references: [id])
+  employee               Employee                @relation(fields: [employeeId], references: [id])
+  auditEntries           AttendanceAuditEntry[]
+  regularizationRequests RegularizationRequest[]
+
+  @@unique([employeeId, date])
+}
+
+model RegularizationRequest {
+  id               String                     @id @default(cuid())
+  employeeId       Int
+  attendanceId     Int
+  requestType      RegularizationType
+  reason           String
+  proposedCheckIn  DateTime?
+  proposedCheckOut DateTime?
+  proposedStatus   AttendanceStatus?
+  status           RequestStatus              @default(PENDING)
+  submittedAt      DateTime                   @default(now())
+  approvedBy       Int?
+  approvedAt       DateTime?
+  rejectionReason  String?
+  slaBreached      Boolean                    @default(false)
+  escalatedTo      Int?
+  escalatedAt      DateTime?
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+  auditEntries     RegularizationAuditEntry[]
+  approver         Employee?                  @relation("RegularizationApprover", fields: [approvedBy], references: [id])
+  attendance       Attendance                 @relation(fields: [attendanceId], references: [id])
+  employee         Employee                   @relation(fields: [employeeId], references: [id])
+}
+
+model AttendancePolicy {
+  id                 String             @id @default(cuid())
+  companyId          Int
+  policyName         String
+  description        String?
+  standardHours      Float              @default(8.0)
+  flexibleHours      Boolean            @default(false)
+  coreHoursStart     String?
+  coreHoursEnd       String?
+  checkInGrace       Int                @default(15)
+  checkOutGrace      Int                @default(15)
+  lunchBreakGrace    Int                @default(30)
+  overtimeEnabled    Boolean            @default(true)
+  overtimeRate       Float              @default(1.5)
+  maxOvertimeHours   Float              @default(4.0)
+  remoteWorkEnabled  Boolean            @default(false)
+  locationValidation Boolean            @default(true)
+  allowedLocations   Json?
+  holidays           Json?
+  effectiveFrom      DateTime
+  effectiveTo        DateTime?
+  status             PolicyStatus       @default(DRAFT)
+  createdBy          Int
+  approvedBy         Int?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  approver           Employee?          @relation("PolicyApprover", fields: [approvedBy], references: [id])
+  company            Company            @relation(fields: [companyId], references: [id])
+  creator            Employee           @relation("PolicyCreator", fields: [createdBy], references: [id])
+  auditEntries       PolicyAuditEntry[]
+}
+
+model WorkShift {
+  id          String            @id @default(cuid())
+  companyId   Int
+  name        String
+  description String?
+  startTime   String
+  endTime     String
+  workingDays Json
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  employees   ShiftAssignment[]
+  company     Company           @relation(fields: [companyId], references: [id])
+}
+
+model ShiftAssignment {
+  id            String    @id @default(cuid())
+  employeeId    Int
+  shiftId       String
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  employee      Employee  @relation(fields: [employeeId], references: [id])
+  shift         WorkShift @relation(fields: [shiftId], references: [id])
+
+  @@unique([employeeId, shiftId, effectiveFrom])
+}
+
+model AttendanceAuditEntry {
+  id           String      @id @default(cuid())
+  attendanceId Int
+  action       AuditAction
+  performedBy  Int
+  performedAt  DateTime    @default(now())
+  ipAddress    String?
+  userAgent    String?
+  oldValues    Json?
+  newValues    Json?
+  reason       String?
+  sessionId    String?
+  isImmutable  Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  attendance   Attendance  @relation(fields: [attendanceId], references: [id])
+  performer    Employee    @relation("AttendanceAuditor", fields: [performedBy], references: [id])
+}
+
+model RegularizationAuditEntry {
+  id          String                @id @default(cuid())
+  requestId   String
+  action      AuditAction
+  performedBy Int
+  performedAt DateTime              @default(now())
+  ipAddress   String?
+  userAgent   String?
+  oldValues   Json?
+  newValues   Json?
+  reason      String?
+  sessionId   String?
+  isImmutable Boolean               @default(true)
+  createdAt   DateTime              @default(now())
+  performer   Employee              @relation("RegularizationAuditor", fields: [performedBy], references: [id])
+  request     RegularizationRequest @relation(fields: [requestId], references: [id])
+}
+
+model PolicyAuditEntry {
+  id          String           @id @default(cuid())
+  policyId    String
+  action      AuditAction
+  performedBy Int
+  performedAt DateTime         @default(now())
+  ipAddress   String?
+  userAgent   String?
+  oldValues   Json?
+  newValues   Json?
+  reason      String?
+  sessionId   String?
+  isImmutable Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  performer   Employee         @relation("PolicyAuditor", fields: [performedBy], references: [id])
+  policy      AttendancePolicy @relation(fields: [policyId], references: [id])
+}
+
+model Leave {
+  id           Int         @id @default(autoincrement())
+  employeeId   Int
+  departmentId Int
+  type         LeaveType
+  status       LeaveStatus @default(PENDING)
+  reason       String?
+  startDate    DateTime
+  endDate      DateTime
+  approvedById Int?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  approvedBy   Employee?   @relation("LeaveApprover", fields: [approvedById], references: [id])
+  department   Department  @relation(fields: [departmentId], references: [id])
+  employee     Employee    @relation(fields: [employeeId], references: [id])
+}
+
+model Project {
+  id                 Int             @id @default(autoincrement())
+  name               String
+  description        String?
+  companyId          Int
+  departmentId       Int
+  ownerId            Int
+  isActive           Boolean         @default(true)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  actualCost         Decimal?
+  budget             Decimal?
+  code               String?         @unique
+  endDate            DateTime?
+  progressPercentage Int             @default(0)
+  startDate          DateTime?
+  status             ProjectStatus   @default(PLANNING)
+  milestones         Milestone[]
+  company            Company         @relation(fields: [companyId], references: [id])
+  department         Department      @relation(fields: [departmentId], references: [id])
+  owner              Employee        @relation("ProjectOwner", fields: [ownerId], references: [id])
+  projectRoles       ProjectMember[]
+  reports            ProjectReport[] @relation("ProjectReports")
+  tasks              Task[]
+  members            Employee[]      @relation("ProjectMembers")
+}
+
+model ProjectMember {
+  id         Int         @id @default(autoincrement())
+  projectId  Int
+  employeeId Int
+  role       ProjectRole @default(MEMBER)
+  joinedAt   DateTime    @default(now())
+  leftAt     DateTime?
+  isActive   Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  employee   Employee    @relation("ProjectMemberRoles", fields: [employeeId], references: [id])
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, employeeId])
+}
+
+model Milestone {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  projectId   Int
+  dueDate     DateTime
+  completedAt DateTime?
+  isCompleted Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks       Task[]    @relation("MilestoneTasks")
+}
+
+model Task {
+  id                 Int              @id @default(autoincrement())
+  title              String
+  description        String?
+  projectId          Int
+  assignedToId       Int?
+  createdById        Int
+  status             TaskStatus       @default(TODO)
+  priority           TaskPriority     @default(MEDIUM)
+  dueDate            DateTime?
+  startDate          DateTime?
+  estimatedHours     Int?
+  actualHours        Int?
+  isActive           Boolean          @default(true)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  code               String?
+  completedAt        DateTime?
+  milestoneId        Int?
+  parentTaskId       Int?
+  progressPercentage Int              @default(0)
+  assignedTo         Employee?        @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  createdBy          Employee         @relation("TaskCreator", fields: [createdById], references: [id])
+  milestone          Milestone?       @relation("MilestoneTasks", fields: [milestoneId], references: [id])
+  parentTask         Task?            @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
+  subTasks           Task[]           @relation("TaskHierarchy")
+  project            Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  attachments        TaskAttachment[]
+  comments           TaskComment[]
+  dependencies       TaskDependency[] @relation("DependentTask")
+  dependents         TaskDependency[] @relation("PredecessorTask")
+  reports            TaskReport[]     @relation("TaskReports")
+  timeEntries        TaskTimeEntry[]
+}
+
+model TaskDependency {
+  id                Int                @id @default(autoincrement())
+  predecessorTaskId Int
+  dependentTaskId   Int
+  type              TaskDependencyType @default(FINISH_TO_START)
+  lag               Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  dependentTask     Task               @relation("DependentTask", fields: [dependentTaskId], references: [id], onDelete: Cascade)
+  predecessorTask   Task               @relation("PredecessorTask", fields: [predecessorTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([predecessorTaskId, dependentTaskId])
+}
+
+model TaskComment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  taskId    Int
+  authorId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    Employee @relation("CommentAuthor", fields: [authorId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model TaskTimeEntry {
+  id          Int       @id @default(autoincrement())
+  description String?
+  taskId      Int
+  employeeId  Int
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  employee    Employee  @relation("TimeEntries", fields: [employeeId], references: [id])
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model TaskAttachment {
+  id           Int      @id @default(autoincrement())
+  fileName     String
+  filePath     String
+  fileSize     Int?
+  mimeType     String?
+  taskId       Int
+  uploadedById Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy   Employee @relation("TaskAttachments", fields: [uploadedById], references: [id])
+}
+
+model Notification {
+  id            Int                     @id @default(autoincrement())
+  title         String
+  message       String
+  type          NotificationType
+  referenceId   Int?
+  referenceType String?
+  metadata      Json?
+  createdById   Int
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  createdBy     Employee                @relation("NotificationCreator", fields: [createdById], references: [id])
+  recipients    NotificationRecipient[]
+}
+
+model NotificationRecipient {
+  id             Int          @id @default(autoincrement())
+  notificationId Int
+  recipientId    Int
+  isRead         Boolean      @default(false)
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  recipient      Employee     @relation(fields: [recipientId], references: [id])
+
+  @@unique([notificationId, recipientId])
+}
+
+model CalendarEvent {
+  id             Int                     @id @default(autoincrement())
+  title          String
+  description    String?
+  startDateTime  DateTime
+  endDateTime    DateTime
+  isAllDay       Boolean                 @default(false)
+  eventType      String
+  referenceId    Int?
+  isRecurring    Boolean                 @default(false)
+  recurrenceRule String?
+  organizerId    Int
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  organizer      Employee                @relation("EventOrganizer", fields: [organizerId], references: [id])
+  attendees      CalendarEventAttendee[]
+}
+
+model CalendarEventAttendee {
+  id         Int           @id @default(autoincrement())
+  eventId    Int
+  attendeeId Int
+  status     String        @default("pending")
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  attendee   Employee      @relation("EventAttendee", fields: [attendeeId], references: [id])
+  event      CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, attendeeId])
+}
+
+model ProjectReport {
+  id             Int      @id @default(autoincrement())
+  projectId      Int
+  reportType     String
+  totalTasks     Int
+  completedTasks Int
+  overdueTasks   Int
+  totalHours     Int
+  actualHours    Int
+  budgetUsed     Decimal?
+  progressData   Json?
+  generatedById  Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  generatedBy    Employee @relation("ReportGenerator", fields: [generatedById], references: [id])
+  project        Project  @relation("ProjectReports", fields: [projectId], references: [id])
+}
+
+model TaskReport {
+  id               Int        @id @default(autoincrement())
+  taskId           Int
+  reportDate       DateTime   @default(now())
+  statusSnapshot   TaskStatus
+  progressSnapshot Int
+  hoursSpent       Int?
+  notes            String?
+  reportedById     Int
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  reportedBy       Employee   @relation("TaskReporter", fields: [reportedById], references: [id])
+  task             Task       @relation("TaskReports", fields: [taskId], references: [id])
+}
+
+model ProjectTemplate {
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String?
+  templateData Json
+  createdById  Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    Employee @relation("TemplateCreator", fields: [createdById], references: [id])
+}
+
+model AutomationRule {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String?
+  triggerType   String
+  triggerConfig Json
+  actionType    String
+  actionConfig  Json
+  isActive      Boolean  @default(true)
+  createdById   Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     Employee @relation("AutomationCreator", fields: [createdById], references: [id])
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  MICROSOFT
+  GITHUB
+  MOBILE
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum Designation {
+  INTERN
+  SOFTWARE_ENGINEER
+  SENIOR_ENGINEER
+  TECH_LEAD
+  MANAGER
+  HR
+  DIRECTOR
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LEAVE
+  PARTIAL
+  LATE
+  EARLY_DEPARTURE
+  REGULARIZED
+}
+
+enum RegularizationType {
+  MISSED_PUNCH
+  TIME_CORRECTION
+  ATTENDANCE_REGULARIZATION
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ESCALATED
+}
+
+enum PolicyStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  PENDING_APPROVAL
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  APPROVE
+  REJECT
+  LOCK
+  UNLOCK
+  EXPORT
+  ACCESS
+  CHECK_IN
+  CHECK_OUT
+}
+
+enum LeaveType {
+  CASUAL
+  SICK
+  EARNED
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DepartmentType {
+  IT
+  SALES
+  HR
+  FINANCE
+  MARKETING
+  OPERATIONS
+}
+
+enum Status {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ProjectRole {
+  OWNER
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskDependencyType {
+  FINISH_TO_START
+  START_TO_START
+  FINISH_TO_FINISH
+  START_TO_FINISH
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_UPDATED
+  TASK_OVERDUE
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  DEADLINE_REMINDER
+  DEPENDENCY_BLOCKED
+}
+
+enum CalendarViewType {
+  DAY
+  WEEK
+  MONTH
+  GANTT
+}
+
+enum Plan {
+  TRIAL
+  BASIC
+  PRO
+  ENTERPRISE
+}

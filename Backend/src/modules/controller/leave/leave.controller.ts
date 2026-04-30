@@ -8,6 +8,12 @@ const prisma = new PrismaClient();
 const notificationService = new LeaveNotificationService();
 const approvalService = new LeaveApprovalService();
 
+function stripSeedUiLeaveReason(reason: string | null | undefined): string | null {
+  if (reason == null) return null;
+  const s = reason.replace(/^\[SEED_UI_LEAVE\]\s*/, "");
+  return s.length ? s : null;
+}
+
 export const createLeave = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -107,7 +113,7 @@ export const createLeave = async (req: Request, res: Response) => {
       leave: {
         id: leave.id,
         type: leave.type,
-        reason: leave.reason,
+        reason: stripSeedUiLeaveReason(leave.reason),
         startDate: leave.startDate,
         endDate: leave.endDate,
         status: leave.status,
@@ -166,7 +172,7 @@ export const getMyLeaves = async (req: Request, res: Response) => {
     const formattedLeaves = leaves.map(leave => ({
       id: leave.id,
       type: leave.type,
-      reason: leave.reason,
+      reason: stripSeedUiLeaveReason(leave.reason),
       startDate: leave.startDate,
       endDate: leave.endDate,
       status: leave.status,
@@ -215,7 +221,7 @@ export const getAllLeaves = async (req: Request, res: Response) => {
     const formattedLeaves = leaves.map(leave => ({
       id: leave.id,
       type: leave.type,
-      reason: leave.reason,
+      reason: stripSeedUiLeaveReason(leave.reason),
       startDate: leave.startDate,
       endDate: leave.endDate,
       status: leave.status,
@@ -280,7 +286,7 @@ export const getLeaveById = async (req: Request, res: Response) => {
     const formattedLeave = {
       id: leave.id,
       type: leave.type,
-      reason: leave.reason,
+      reason: stripSeedUiLeaveReason(leave.reason),
       startDate: leave.startDate,
       endDate: leave.endDate,
       status: leave.status,
@@ -382,7 +388,7 @@ export const updateLeaveStatus = async (req: Request, res: Response) => {
     const formattedLeave = {
       id: leave.id,
       type: leave.type,
-      reason: leave.reason,
+      reason: stripSeedUiLeaveReason(leave.reason),
       startDate: leave.startDate,
       endDate: leave.endDate,
       status: leave.status,

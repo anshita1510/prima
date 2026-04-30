@@ -1,5 +1,6 @@
 import { PrismaClient, Role, DepartmentType, Designation } from '@prisma/client'
 import bcrypt from 'bcrypt'
+import { seedRichDemo } from './seedRichDemo'
 
 const prisma = new PrismaClient()
 
@@ -109,6 +110,8 @@ async function main(): Promise<void> {
       isActive: true,
     },
   })
+
+  await seedRichDemo(prisma, passwordHash)
 
   console.log('✅ Seeding completed successfully')
   console.log('👤 SUPER ADMIN LOGIN:')

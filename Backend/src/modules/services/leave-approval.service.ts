@@ -2,6 +2,12 @@ import { PrismaClient, Role, LeaveStatus, Designation } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+function stripSeedUiLeaveReason(reason: string | null | undefined): string | null {
+  if (reason == null) return null;
+  const s = reason.replace(/^\[SEED_UI_LEAVE\]\s*/, '');
+  return s.length ? s : null;
+}
+
 export interface ApprovalPermission {
   canApprove: boolean;
   reason?: string;
@@ -250,7 +256,7 @@ export class LeaveApprovalService {
     return leaves.map(leave => ({
       id: leave.id,
       type: leave.type,
-      reason: leave.reason,
+      reason: stripSeedUiLeaveReason(leave.reason),
       startDate: leave.startDate,
       endDate: leave.endDate,
       status: leave.status,
@@ -296,11 +302,14 @@ export class LeaveApprovalService {
       pending: leaves.filter(l => l.status === LeaveStatus.PENDING).length,
       approved: leaves.filter(l => l.status === LeaveStatus.APPROVED).length,
       rejected: leaves.filter(l => l.status === LeaveStatus.REJECTED).length,
+      cancelled: leaves.filter(l => l.status === LeaveStatus.CANCELLED).length,
       byType: {
         CASUAL: leaves.filter(l => l.type === 'CASUAL').length,
         SICK: leaves.filter(l => l.type === 'SICK').length,
         EARNED: leaves.filter(l => l.type === 'EARNED').length,
-        UNPAID: leaves.filter(l => l.type === 'UNPAID').length
+        UNPAID: leaves.filter(l => l.type === 'UNPAID').length,
+        ANNUAL: leaves.filter(l => l.type === 'ANNUAL').length,
+        WORK_FROM_HOME: leaves.filter(l => l.type === 'WORK_FROM_HOME').length
       }
     };
 

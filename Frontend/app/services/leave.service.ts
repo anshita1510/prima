@@ -1,5 +1,5 @@
 export interface LeaveApplication {
-  type: 'CASUAL' | 'SICK' | 'EARNED' | 'UNPAID';
+  type: 'CASUAL' | 'SICK' | 'EARNED' | 'UNPAID' | 'ANNUAL' | 'WORK_FROM_HOME';
   reason?: string;
   startDate: string;
   endDate: string;
@@ -11,7 +11,7 @@ export interface Leave {
   reason?: string;
   startDate: string;
   endDate: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   employee: {
     id?: number;
     name: string;
@@ -32,7 +32,7 @@ export interface LeaveRequest {
   reason?: string;
   startDate: string;
   endDate: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   employee: {
     id: number;
     name: string;
@@ -50,11 +50,14 @@ export interface LeaveStats {
   pending: number;
   approved: number;
   rejected: number;
+  cancelled?: number;
   byType: {
     CASUAL: number;
     SICK: number;
     EARNED: number;
     UNPAID: number;
+    ANNUAL?: number;
+    WORK_FROM_HOME?: number;
   };
 }
 
@@ -403,6 +406,10 @@ class LeaveService {
         return 'Earned Leave';
       case 'UNPAID':
         return 'Unpaid Leave';
+      case 'ANNUAL':
+        return 'Annual Leave';
+      case 'WORK_FROM_HOME':
+        return 'Work From Home';
       default:
         return type;
     }
@@ -417,6 +424,8 @@ class LeaveService {
         return 'text-green-600 bg-green-100';
       case 'REJECTED':
         return 'text-red-600 bg-red-100';
+      case 'CANCELLED':
+        return 'text-slate-600 bg-slate-100';
       default:
         return 'text-gray-600 bg-gray-100';
     }

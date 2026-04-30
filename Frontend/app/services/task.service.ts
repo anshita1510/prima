@@ -51,7 +51,8 @@ export interface TaskStats {
   inProgress: number;
   inReview: number;
   completed: number;
-  cancelled: number;
+  /** Derived on the server when not explicitly stored */
+  cancelled?: number;
 }
 
 export interface CreateTaskData {

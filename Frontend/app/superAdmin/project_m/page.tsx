@@ -1,15 +1,7 @@
-import React from 'react'
-import Sidebar from '../_components/Sidebarr'
-
-export default function page() {
+export default function ProjectManagePage() {
   return (
-    <div className="flex min-h-screen">
-    {/* Sidebar */}
-    <Sidebar />
-    {/* Main Content */}
-    <main className="flex-1 p-6">
-      welcome projectManage
-    </main>
-  </div>
-  )
+    <div className="p-6">
+      <p className="text-[var(--text-color)]">Welcome to project management.</p>
+    </div>
+  );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Sidebar from '../_components/Sidebarr';
 import {
     Crown, Search, RefreshCw, ChevronLeft, ChevronRight,
     CheckCircle, AlertCircle, X, Building2, Mail, Phone,
@@ -114,12 +113,10 @@ export default function ManageUsersPage() {
     const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
     return (
-        <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-color)' }}>
-            <Sidebar />
-            <main className="flex-1 min-w-0 pt-[57px] lg:pt-0">
-                {selectedCeo && <CeoDetailPanel ceo={selectedCeo} onClose={() => setSelectedCeo(null)} />}
+        <>
+            {selectedCeo && <CeoDetailPanel ceo={selectedCeo} onClose={() => setSelectedCeo(null)} />}
 
-                <div className="p-6 lg:p-8">
+            <div className="p-6 lg:p-8">
                     {/* Header */}
                     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
@@ -257,7 +254,6 @@ export default function ManageUsersPage() {
                         </p>
                     )}
                 </div>
-            </main>
-        </div>
+        </>
     );
 }

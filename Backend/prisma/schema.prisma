@@ -678,12 +678,15 @@ enum LeaveType {
   SICK
   EARNED
   UNPAID
+  ANNUAL
+  WORK_FROM_HOME
 }
 
 enum LeaveStatus {
   PENDING
   APPROVED
   REJECTED
+  CANCELLED
 }
 
 enum DepartmentType {

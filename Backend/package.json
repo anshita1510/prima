@@ -3,13 +3,17 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "prisma": {
+    "seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no testS specified\" && exit 1",
     "dev": "nodemon -e ts --exec 'ts-node src/server.ts'",
     "start": "node src/server.ts",
     "prisma:migrate": "npx prisma migrate dev --name $migration_name",
-    "prisma:deploy": "npx prisma migrate deploy"
+    "prisma:deploy": "npx prisma migrate deploy",
+    "db:seed": "npx prisma db seed"
   },
   "keywords": [],
   "author": "",

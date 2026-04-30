@@ -50,7 +50,7 @@ export const UpdateTaskDto = z.object({
 
 export const TaskQueryDto = z.object({
   page: z.string().transform(Number).pipe(z.number().int().positive()).optional().default(1),
-  limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).optional().default(10),
+  limit: z.string().transform(Number).pipe(z.number().int().positive().max(500)).optional().default(10),
   projectId: z.string().transform(Number).pipe(z.number().int().positive()).optional(),
   assignedToId: z.string().transform(Number).pipe(z.number().int().positive()).optional(),
   status: TaskStatusEnum.optional(),

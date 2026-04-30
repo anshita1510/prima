@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '../../lib/axios';
-import Sidebar from './_components/Sidebarr';
 import Banner from './_components/Banner';
 import PlatformPerformanceCard from './_components/PlatformPerformanceCard';
 import { useAuth } from '../hooks/useAuth';
@@ -178,11 +177,9 @@ export default function SuperAdminDashboard() {
   const companiesList = dashboardData?.recentCompanies || recentCompanies;
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-color)' }}>
-      <Sidebar />
-      <main className="flex-1 min-w-0">
-        <Banner onRefresh={handleRefresh} isRefreshing={loading || isSeeding} user={user} />
-        <div className="p-5 md:p-6 space-y-6">
+    <>
+      <Banner onRefresh={handleRefresh} isRefreshing={loading || isSeeding} user={user} />
+      <div className="p-5 md:p-6 space-y-6">
 
           {/* Business Growth */}
           <PlatformPerformanceCard performanceData={dashboardData?.performanceData} />
@@ -410,8 +407,7 @@ export default function SuperAdminDashboard() {
             </div>
           </div>
 
-        </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 
-import Sidebar from '../_components/Sidebarr';
 import PlatformPerformanceCard from '../_components/PlatformPerformanceCard';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -98,22 +97,17 @@ export default function AnalyticsPage() {
 
   if (loading && !analyticsData) {
     return (
-      <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-color)' }}>
-        <Sidebar />
-        <main className="flex-1 min-w-0">
-          <div className="p-5 md:p-6 flex items-center justify-center h-[70vh]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: 'var(--primary-color)' }}></div>
-          </div>
-        </main>
+      <div className="flex items-center justify-center p-5 md:p-6" style={{ minHeight: "70vh" }}>
+        <div
+          className="h-12 w-12 animate-spin rounded-full border-b-2"
+          style={{ borderColor: "var(--primary-color)" }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-color)' }}>
-      <Sidebar />
-      <main className="flex-1 min-w-0">
-        <div className="p-5 md:p-6 pr-16 space-y-6">
+    <div className="p-5 md:p-6 pr-16 space-y-6">
 
           {/* Header: Title row */}
           <div className="flex flex-col gap-1">
@@ -313,8 +307,6 @@ export default function AnalyticsPage() {
 
             </div>
           )}
-        </div>
-      </main>
     </div>
   );
 }

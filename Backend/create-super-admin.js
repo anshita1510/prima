@@ -3,7 +3,7 @@ const axios = require('axios');
 async function createSuperAdmin() {
   try {
     const response = await axios.post('http://localhost:5004/api/users/superAdmin', {
-      email: 'admin@PRIMA.com',
+      email: 'superadmin@mailinator.com',
       firstName: 'Super',
       lastName: 'Admin',
       phone: '+1234567890',
@@ -16,7 +16,7 @@ async function createSuperAdmin() {
     
     // Test login with the created admin
     const loginResponse = await axios.post('http://localhost:5004/api/users/login', {
-      email: 'admin@PRIMA.com',
+      email: 'superadmin@mailinator.com',
       password: 'Admin@123' // You'll need to check the actual password from the email or logs
     });
     

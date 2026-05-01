@@ -242,19 +242,36 @@ export class DashboardController {
       });
       console.log('📊 Total Managers:', totalManagers);
 
-      // Get total employees count - remove isActive filter
-      const totalEmployees = await prisma.user.count({
-        where: {
-          role: Role.EMPLOYEE
-        }
+      const totalLeadershipUsers = await prisma.user.count({
+        where: { role: { not: Role.EMPLOYEE } },
       });
-      console.log('📊 Total Employees:', totalEmployees);
+      console.log('📊 Leadership users (non-employee):', totalLeadershipUsers);
+
+      const totalHr = await prisma.user.count({
+        where: {
+          role: { not: Role.EMPLOYEE },
+          designation: { equals: 'HR', mode: 'insensitive' },
+        },
+      });
+      console.log('📊 HR (non-employee):', totalHr);
+
+      const otherAdminLeaders = await prisma.user.count({
+        where: {
+          role: { in: [Role.ADMIN, Role.SUPER_ADMIN] },
+          ceoId: null,
+          NOT: { designation: { equals: 'HR', mode: 'insensitive' } },
+        },
+      });
 
       // Get total companies count - remove isActive filter
       const totalCompanies = await prisma.company.count();
       console.log('📊 Total Companies:', totalCompanies);
 
-      // Get total projects count
+      const totalCeos = await prisma.user.count({
+        where: { ceoId: { not: null } },
+      });
+      console.log('📊 Total CEOs:', totalCeos);
+
       const totalProjects = await prisma.project.count();
 
       // Get total departments count
@@ -289,17 +306,19 @@ export class DashboardController {
 
       const recentRegistrations = await prisma.user.count({
         where: {
-          createdAt: {
-            gte: sevenDaysAgo
-          }
-        }
+          createdAt: { gte: sevenDaysAgo },
+          role: { not: Role.EMPLOYEE },
+        },
       });
 
       console.log('📊 Final Stats Object:', {
         totalUsers,
         totalAdmins,
+        totalCeos,
         totalManagers,
-        totalEmployees,
+        totalLeadershipUsers,
+        totalHr,
+        otherAdminLeaders,
         totalCompanies,
         totalProjects,
         totalDepartments,
@@ -325,8 +344,8 @@ export class DashboardController {
 
       const userGrowthData = [
         { month: 'Jan', users: 4 }, { month: 'Feb', users: 7 }, { month: 'Mar', users: 10 },
-        { month: 'Apr', users: 8 }, { month: 'May', users: 14 }, { month: 'Jun', users: totalEmployees },
-        { month: 'Jul', users: totalUsers > 50 ? 50 : totalUsers }, { month: 'Aug', users: totalUsers },
+        { month: 'Apr', users: 8 }, { month: 'May', users: 14 }, { month: 'Jun', users: totalLeadershipUsers },
+        { month: 'Jul', users: totalLeadershipUsers > 50 ? 50 : totalLeadershipUsers }, { month: 'Aug', users: totalLeadershipUsers },
       ];
 
       // Dynamic Performance Data based on live metrics
@@ -373,8 +392,11 @@ export class DashboardController {
         stats: {
           totalUsers,
           totalAdmins,
+          totalCeos,
           totalManagers,
-          totalEmployees,
+          totalLeadershipUsers,
+          totalHr,
+          otherAdminLeaders,
           totalCompanies,
           totalProjects,
           totalDepartments,
@@ -415,6 +437,7 @@ export class DashboardController {
 
       // Get recent user creations
       const recentUsers = await prisma.user.findMany({
+        where: { role: { not: Role.EMPLOYEE } },
         take: 5,
         orderBy: {
           createdAt: 'desc'
@@ -425,6 +448,8 @@ export class DashboardController {
           lastName: true,
           email: true,
           role: true,
+          designation: true,
+          ceoId: true,
           createdAt: true
         }
       });
@@ -466,11 +491,13 @@ export class DashboardController {
       // Add user activities
       recentUsers.forEach((recentUser) => {
         const timeAgo = getTimeAgo(recentUser.createdAt);
+        const isCeo = !!recentUser.ceoId || recentUser.designation === 'CEO';
+        const isAdminTier = recentUser.role === 'ADMIN' || recentUser.role === 'SUPER_ADMIN';
         activities.push({
           id: `user-${recentUser.id}`,
-          type: recentUser.role === 'ADMIN' ? 'admin_created' : 'user_created',
-          title: recentUser.role === 'ADMIN' ? 'New Admin Created' : 'New User Registered',
-          description: `${recentUser.firstName} ${recentUser.lastName} (${recentUser.email}) joined as ${recentUser.role}`,
+          type: isCeo ? 'company_created' : isAdminTier ? 'admin_created' : 'user_created',
+          title: isCeo ? 'CEO Account Created' : isAdminTier ? 'New Admin Created' : 'New User Registered',
+          description: `${recentUser.firstName} ${recentUser.lastName} (${recentUser.email}) — ${isCeo ? 'CEO' : recentUser.role}`,
           timestamp: timeAgo,
           user: 'System'
         });

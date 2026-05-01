@@ -258,16 +258,42 @@ export class UserController {
         return res.status(403).json({ error: "Forbidden: Admin access required" });
       }
 
-      // Get all users with their employee and company information
-      const users = await prisma.user.findMany({
-        include: {
-          employee: true,
-          company: true
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      });
+      const isSuperAdmin = user.role === Role.SUPER_ADMIN;
+      const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10));
+      const search =
+        typeof req.query.search === "string" ? req.query.search.trim() : "";
+
+      const andClauses: Record<string, unknown>[] = [];
+      if (isSuperAdmin) {
+        andClauses.push({ role: { not: Role.EMPLOYEE } });
+      }
+      if (search) {
+        andClauses.push({
+          OR: [
+            { email: { contains: search, mode: "insensitive" } },
+            { firstName: { contains: search, mode: "insensitive" } },
+            { lastName: { contains: search, mode: "insensitive" } },
+          ],
+        });
+      }
+      const where = andClauses.length > 0 ? { AND: andClauses } : {};
+
+      const [users, total] = await Promise.all([
+        prisma.user.findMany({
+          where,
+          include: {
+            employee: true,
+            company: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.user.count({ where }),
+      ]);
 
       // Format users for frontend
       const formattedUsers = users.map(user => {
@@ -303,7 +329,10 @@ export class UserController {
       return res.json({
         success: true,
         users: formattedUsers,
-        count: formattedUsers.length
+        total,
+        page,
+        limit,
+        count: formattedUsers.length,
       });
     } catch (error: any) {
       console.error('Get all users error:', error);
@@ -818,7 +847,7 @@ export class UserController {
           description: "Complete API documentation for PRIMA Task Management System",
           contact: {
             name: "PRIMA Development Team",
-            email: "dev@PRIMA.com"
+            email: "dev@mailinator.com"
           }
         },
         baseUrl: process.env.API_BASE_URL || "http://localhost:3001",

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import { NotificationService } from './notification.service';
 import nodemailer from 'nodemailer';
 
@@ -45,6 +45,38 @@ export class CalendarService {
 
   constructor() {
     this.notificationService = new NotificationService();
+  }
+
+  /** Organizer, company ADMIN, or SUPER_ADMIN may update/delete an event. */
+  private async assertCanManageEvent(userId: number, eventId: number): Promise<void> {
+    const actorUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, companyId: true },
+    });
+    if (!actorUser) throw new Error('User not found');
+
+    const actorEmployee = await prisma.employee.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    const event = await prisma.calendarEvent.findUnique({
+      where: { id: eventId },
+      include: { organizer: { select: { companyId: true } } },
+    });
+    if (!event) throw new Error('Event not found');
+
+    if (actorEmployee && event.organizerId === actorEmployee.id) return;
+    if (actorUser.role === Role.SUPER_ADMIN) return;
+    if (
+      actorUser.role === Role.ADMIN &&
+      actorUser.companyId != null &&
+      actorUser.companyId === event.organizer.companyId
+    ) {
+      return;
+    }
+
+    throw new Error('Only the organizer or a company admin can modify this meeting');
   }
 
   private sendEventEmail(to: string, subject: string, html: string) {
@@ -183,11 +215,13 @@ export class CalendarService {
       ]
     };
 
-    // Only apply date filter if both dates provided
+    // Overlap with [startDate, endDate] if both provided (event intersects window)
     if (filters.startDate && filters.endDate) {
+      const rangeStart = new Date(filters.startDate);
+      const rangeEnd = new Date(filters.endDate);
       where.AND = [
-        { startDateTime: { gte: new Date(filters.startDate) } },
-        { endDateTime: { lte: new Date(filters.endDate) } }
+        { startDateTime: { lte: rangeEnd } },
+        { endDateTime: { gte: rangeStart } },
       ];
     }
 
@@ -242,26 +276,7 @@ export class CalendarService {
   }
 
   async updateEvent(eventId: number, userId: number, data: UpdateEventDTO) {
-    const employee = await prisma.employee.findUnique({
-      where: { userId }
-    });
-
-    if (!employee) {
-      throw new Error('Employee not found');
-    }
-
-    // Check if user is organizer
-    const event = await prisma.calendarEvent.findUnique({
-      where: { id: eventId }
-    });
-
-    if (!event) {
-      throw new Error('Event not found');
-    }
-
-    if (event.organizerId !== employee.id) {
-      throw new Error('Only organizer can update the event');
-    }
+    await this.assertCanManageEvent(userId, eventId);
 
     const updatedEvent = await prisma.calendarEvent.update({
       where: { id: eventId },
@@ -287,16 +302,16 @@ export class CalendarService {
       }
     });
 
-    // Notify attendees about update
+    const actingEmployee = await prisma.employee.findUnique({ where: { userId } });
     const attendeeIds = updatedEvent.attendees.map(a => a.attendeeId);
-    if (attendeeIds.length > 0) {
+    if (actingEmployee && attendeeIds.length > 0) {
       await this.notificationService.createNotification({
         title: 'Event Updated',
         message: `"${updatedEvent.title}" has been updated`,
         type: 'TASK_UPDATED',
         referenceId: updatedEvent.id,
         referenceType: 'calendar_event',
-        createdById: employee.id,
+        createdById: actingEmployee.id,
         recipientIds: attendeeIds
       });
     }
@@ -305,37 +320,31 @@ export class CalendarService {
   }
 
   async deleteEvent(eventId: number, userId: number) {
-    const employee = await prisma.employee.findUnique({
-      where: { userId }
+    const actingEmployee = await prisma.employee.findUnique({
+      where: { userId },
+      select: { id: true },
     });
-
-    if (!employee) {
-      throw new Error('Employee not found');
-    }
 
     const event = await prisma.calendarEvent.findUnique({
       where: { id: eventId },
-      include: { attendees: true }
+      include: { attendees: true },
     });
 
     if (!event) {
       throw new Error('Event not found');
     }
 
-    if (event.organizerId !== employee.id) {
-      throw new Error('Only organizer can delete the event');
-    }
+    await this.assertCanManageEvent(userId, eventId);
 
-    // Notify attendees about cancellation
     const attendeeIds = event.attendees.map(a => a.attendeeId);
-    if (attendeeIds.length > 0) {
+    if (actingEmployee && attendeeIds.length > 0) {
       await this.notificationService.createNotification({
         title: 'Event Cancelled',
         message: `"${event.title}" has been cancelled`,
         type: 'TASK_UPDATED',
         referenceId: event.id,
         referenceType: 'calendar_event',
-        createdById: employee.id,
+        createdById: actingEmployee.id,
         recipientIds: attendeeIds
       });
     }

@@ -49,29 +49,39 @@ export const getAnalyticsData = async (req: Request, res: Response) => {
         break;
     }
 
-    // Get user registrations over time
+    // Leadership-only registrations (CEO / manager / HR / admin — no employees)
     const users = await prisma.user.findMany({
       where: {
-        createdAt: {
-          gte: startDate
-        }
+        createdAt: { gte: startDate },
+        role: { not: Role.EMPLOYEE },
       },
       select: {
         createdAt: true,
-        role: true
+        role: true,
+        designation: true,
+        ceoId: true,
       },
       orderBy: {
         createdAt: 'asc'
       }
     });
 
-    // Group users by time period
     const userRegistrations = groupDataByPeriod(users, period as string, 'createdAt', startDate).map(item => ({
       period: item.periodLabel,
       total: item.data.length,
-      admins: item.data.filter((u: any) => [Role.ADMIN, Role.SUPER_ADMIN].includes(u.role)).length,
+      ceos: item.data.filter((u: any) => u.ceoId).length,
       managers: item.data.filter((u: any) => u.role === Role.MANAGER).length,
-      employees: item.data.filter((u: any) => u.role === Role.EMPLOYEE).length
+      hr: item.data.filter(
+        (u: any) =>
+          typeof u.designation === 'string' &&
+          u.designation.toLowerCase() === 'hr'
+      ).length,
+      otherAdmins: item.data.filter(
+        (u: any) =>
+          [Role.ADMIN, Role.SUPER_ADMIN].includes(u.role) &&
+          !u.ceoId &&
+          !(typeof u.designation === 'string' && u.designation.toLowerCase() === 'hr')
+      ).length,
     }));
 
     // Get company registrations over time
@@ -96,17 +106,44 @@ export const getAnalyticsData = async (req: Request, res: Response) => {
       active: item.data.filter((c: any) => c.isActive).length
     }));
 
-    // Get role distribution
-    const [admins, managers, employees] = await Promise.all([
-      prisma.user.count({ where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] } } }),
+    const [
+      managers,
+      ceos,
+      totalHr,
+      otherAdminLeaders,
+      totalAdminsForTotals,
+      totalCompaniesCount,
+      leadershipUsers,
+      activeLeadership,
+    ] = await Promise.all([
       prisma.user.count({ where: { role: Role.MANAGER } }),
-      prisma.user.count({ where: { role: Role.EMPLOYEE } })
+      prisma.user.count({ where: { ceoId: { not: null } } }),
+      prisma.user.count({
+        where: {
+          role: { not: Role.EMPLOYEE },
+          designation: { equals: 'HR', mode: 'insensitive' },
+        },
+      }),
+      prisma.user.count({
+        where: {
+          role: { in: [Role.ADMIN, Role.SUPER_ADMIN] },
+          ceoId: null,
+          NOT: { designation: { equals: 'HR', mode: 'insensitive' } },
+        },
+      }),
+      prisma.user.count({ where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] } } }),
+      prisma.company.count(),
+      prisma.user.count({ where: { role: { not: Role.EMPLOYEE } } }),
+      prisma.user.count({
+        where: { isActive: true, role: { not: Role.EMPLOYEE } },
+      }),
     ]);
 
     const roleDistribution = [
-      { role: 'Admins', count: admins, color: '#3B82F6' },
+      { role: 'CEO accounts', count: ceos, color: '#F59E0B' },
       { role: 'Managers', count: managers, color: '#10B981' },
-      { role: 'Employees', count: employees, color: '#F59E0B' }
+      { role: 'HR', count: totalHr, color: '#6366F1' },
+      { role: 'Other admins', count: otherAdminLeaders, color: '#3B82F6' },
     ];
 
     // Get activity trends (using updatedAt as proxy for activity)
@@ -115,7 +152,8 @@ export const getAnalyticsData = async (req: Request, res: Response) => {
         updatedAt: {
           gte: startDate,
           lte: endDate
-        }
+        },
+        role: { not: Role.EMPLOYEE },
       },
       select: {
         updatedAt: true
@@ -130,14 +168,14 @@ export const getAnalyticsData = async (req: Request, res: Response) => {
       activity: item.data.length
     }));
 
-    // Get current totals for comparison
     const currentTotals = {
-      totalUsers: await prisma.user.count(),
-      totalAdmins: await prisma.user.count({ where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] } } }),
-      totalManagers: await prisma.user.count({ where: { role: Role.MANAGER } }),
-      totalEmployees: await prisma.user.count({ where: { role: Role.EMPLOYEE } }),
-      totalCompanies: await prisma.company.count(),
-      activeUsers: await prisma.user.count({ where: { isActive: true } }),
+      totalUsers: leadershipUsers,
+      totalAdmins: totalAdminsForTotals,
+      totalCeos: ceos,
+      totalManagers: managers,
+      totalHr,
+      totalCompanies: totalCompaniesCount,
+      activeUsers: activeLeadership,
     };
 
     return res.json({
@@ -181,6 +219,7 @@ export const getDetailedAnalytics = async (req: Request, res: Response) => {
     switch (metric) {
       case 'users':
         data = await prisma.user.findMany({
+          where: { role: { not: Role.EMPLOYEE } },
           select: {
             id: true,
             firstName: true,
@@ -226,6 +265,7 @@ export const getDetailedAnalytics = async (req: Request, res: Response) => {
       case 'roles':
         data = await prisma.user.groupBy({
           by: ['role'],
+          where: { role: { not: Role.EMPLOYEE } },
           _count: {
             role: true
           },

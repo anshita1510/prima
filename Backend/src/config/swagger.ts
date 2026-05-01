@@ -9,7 +9,7 @@ const options: swaggerJsdoc.Options = {
       description: 'Complete API documentation for PRIMA Clone - HR Management System',
       contact: {
         name: 'API Support',
-        email: 'support@PRIMA.com'
+        email: 'support@mailinator.com'
       }
     },
     servers: [

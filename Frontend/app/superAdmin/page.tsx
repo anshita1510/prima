@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import {
   Users, Shield, TrendingUp, AlertCircle, Building, User,
-  UserPlus, Settings, FolderOpen, Activity, RefreshCw,
+  UserPlus, Settings, Crown, Activity, RefreshCw,
   CheckCircle, Lock, FileText, Briefcase, CreditCard, MessageSquare, Layout, Zap, Globe, type LucideIcon,
 } from 'lucide-react';
 
@@ -24,10 +24,10 @@ const userGrowthData = [
   { month: 'Jul', users: 22 }, { month: 'Aug', users: 20 },
 ];
 const roleDistData = [
-  { name: 'Employees', value: 60, color: '#22c55e' },
-  { name: 'Managers', value: 20, color: '#7c3aed' },
-  { name: 'HRs', value: 15, color: '#a78bfa' },
-  { name: 'Super Admins', value: 5, color: '#f59e0b' },
+  { name: 'CEOs', value: 8, color: '#f59e0b' },
+  { name: 'Managers', value: 6, color: '#7c3aed' },
+  { name: 'HR', value: 4, color: '#ec4899' },
+  { name: 'Other admins', value: 3, color: '#a78bfa' },
 ];
 
 const tooltipStyle = {
@@ -107,7 +107,7 @@ export default function SuperAdminDashboard() {
         setDashboardData(statsData.stats);
 
         // Auto seed if data is lacking (e.g., less than 5 users total)
-        if (statsData.stats.totalUsers <= 5 && !isSeeding) {
+        if ((statsData.stats.totalLeadershipUsers ?? statsData.stats.totalUsers) <= 5 && !isSeeding) {
           handleSeedData();
         }
       }
@@ -151,15 +151,15 @@ export default function SuperAdminDashboard() {
   };
 
   const statCards: StatCard[] = dashboardData ? [
-    { label: 'Total Users', value: dashboardData.totalUsers, sub: `${dashboardData.activeUsers} active users`, icon: Users, accent: '#7c3aed', trend: '↑ Live', trendUp: true },
-    { label: 'Total Admins', value: dashboardData.totalAdmins, sub: 'Administrative roles', icon: Shield, accent: '#3b82f6', trend: '↑ Live', trendUp: true },
+    { label: 'Leadership users', value: dashboardData.totalLeadershipUsers ?? dashboardData.totalUsers, sub: `${dashboardData.activeUsers} active (CEO, manager, HR, admin)`, icon: Users, accent: '#7c3aed', trend: '↑ Live', trendUp: true },
+    { label: 'CEO accounts', value: dashboardData.totalCeos ?? 0, sub: `${dashboardData.totalHr ?? 0} HR · ${dashboardData.otherAdminLeaders ?? 0} other admins`, icon: Crown, accent: '#f59e0b', trend: '↑ Live', trendUp: true },
     { label: 'System Health', value: `${dashboardData.systemHealth}%`, sub: 'All systems nominal', icon: TrendingUp, accent: '#22c55e', trend: 'Optimal', trendUp: true, health: dashboardData.systemHealth },
     { label: 'Total Companies', value: dashboardData.totalCompanies, sub: 'Active organizations', icon: Building, accent: '#7c3aed', trend: '↑ Live', trendUp: true },
     { label: 'Pending Registrations', value: dashboardData.pendingApprovals, sub: 'Awaiting approval', icon: AlertCircle, accent: '#ef4444', trend: `${dashboardData.pendingApprovals} pending`, trendUp: dashboardData.pendingApprovals === 0 },
     { label: 'Recent Users', value: dashboardData.recentRegistrations, sub: 'Registered in last 7 days', icon: Users, accent: '#22c55e', trend: '↑ Live', trendUp: true },
   ] : [
-    { label: 'Total Users', value: '-', sub: 'Loading...', icon: Users, accent: '#7c3aed', trend: '-', trendUp: true },
-    { label: 'Total Admins', value: '-', sub: 'Loading...', icon: Shield, accent: '#3b82f6', trend: '-', trendUp: true },
+    { label: 'Leadership users', value: '-', sub: 'Loading...', icon: Users, accent: '#7c3aed', trend: '-', trendUp: true },
+    { label: 'CEO accounts', value: '-', sub: 'Loading...', icon: Crown, accent: '#f59e0b', trend: '-', trendUp: true },
     { label: 'System Health', value: '-', sub: 'Loading...', icon: TrendingUp, accent: '#22c55e', trend: '-', trendUp: true, health: 0 },
     { label: 'Total Companies', value: '-', sub: 'Loading...', icon: Building, accent: '#7c3aed', trend: '-', trendUp: true },
     { label: 'Pending Registrations', value: '-', sub: 'Loading...', icon: AlertCircle, accent: '#ef4444', trend: '-', trendUp: false },
@@ -167,12 +167,19 @@ export default function SuperAdminDashboard() {
   ];
 
   const dynamicRoleDistData = dashboardData ? [
-    { name: 'Employees', value: dashboardData.totalEmployees > 0 ? dashboardData.totalEmployees : 60, color: '#22c55e' },
-    { name: 'Managers', value: dashboardData.totalManagers > 0 ? dashboardData.totalManagers : 20, color: '#7c3aed' },
-    { name: 'Admins', value: dashboardData.totalAdmins > 0 ? dashboardData.totalAdmins : 5, color: '#a78bfa' },
+    { name: 'CEOs', value: dashboardData.totalCeos ?? 0, color: '#f59e0b' },
+    { name: 'Managers', value: dashboardData.totalManagers ?? 0, color: '#7c3aed' },
+    { name: 'HR', value: dashboardData.totalHr ?? 0, color: '#ec4899' },
+    { name: 'Other admins', value: dashboardData.otherAdminLeaders ?? 0, color: '#a78bfa' },
   ] : roleDistData;
 
-  const totalRoles = dashboardData ? dashboardData.totalUsers : 48;
+  const leadershipPieTotal = dashboardData
+    ? (dashboardData.totalCeos ?? 0) +
+      (dashboardData.totalManagers ?? 0) +
+      (dashboardData.totalHr ?? 0) +
+      (dashboardData.otherAdminLeaders ?? 0)
+    : 0;
+  const totalRoles = dashboardData ? Math.max(leadershipPieTotal, 1) : 48;
   const growthData = dashboardData?.userGrowthData || userGrowthData;
   const companiesList = dashboardData?.recentCompanies || recentCompanies;
 

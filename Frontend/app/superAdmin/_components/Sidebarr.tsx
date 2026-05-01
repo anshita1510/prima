@@ -20,12 +20,7 @@ import {
   Crown,
   Building2,
   Users,
-  UserPlus,
-  FolderOpen,
-  CheckSquare,
   LogOut,
-  Minus,
-  Plus,
 } from "lucide-react";
 import { authService } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
@@ -82,29 +77,6 @@ const NAV_SECTIONS: NavSection[] = [
         icon: Users,
         href: "/superAdmin/manageUsers",
       },
-      {
-        id: "create-user",
-        name: "Create User",
-        icon: UserPlus,
-        href: "/superAdmin/createUser",
-      },
-    ],
-  },
-  {
-    title: "Work",
-    items: [
-      {
-        id: "projects",
-        name: "Projects",
-        icon: FolderOpen,
-        href: "/superAdmin/projects",
-      },
-      {
-        id: "tasks",
-        name: "Tasks",
-        icon: CheckSquare,
-        href: "/superAdmin/tasks",
-      },
     ],
   },
 ];
@@ -119,8 +91,6 @@ function isNavActive(pathname: string, item: NavItem): boolean {
 const SIDEBAR_WIDTH_STORAGE_KEY = "prima-sidebar-width-px";
 const SIDEBAR_WIDTH_MIN = 200;
 const SIDEBAR_WIDTH_MAX = 440;
-const SIDEBAR_NUDGE_PX = 16;
-
 function readSidebarWidthFromCss(): number {
   if (typeof window === "undefined") return 240;
   const raw = getComputedStyle(document.documentElement)
@@ -178,12 +148,6 @@ export default function SuperAdminSidebar() {
     },
     []
   );
-
-  const nudgeSidebarWidth = useCallback((delta: number) => {
-    const next = clampSidebarWidth(readSidebarWidthFromCss() + delta);
-    document.documentElement.style.setProperty("--sidebar-width", `${next}px`);
-    persistSidebarWidth(next);
-  }, []);
 
   const startSidebarResize = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -338,27 +302,6 @@ export default function SuperAdminSidebar() {
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <div
-              className="hidden items-center rounded-lg border border-[var(--sidebar-border)] lg:flex"
-              title="Adjust sidebar width"
-            >
-              <button
-                type="button"
-                onClick={() => nudgeSidebarWidth(-SIDEBAR_NUDGE_PX)}
-                className="p-1.5 text-[var(--sidebar-text-muted)] transition-colors hover:bg-[var(--sidebar-item-hover-bg)] hover:text-[var(--sidebar-text)]"
-                aria-label="Decrease sidebar width"
-              >
-                <Minus size={14} strokeWidth={2.5} />
-              </button>
-              <button
-                type="button"
-                onClick={() => nudgeSidebarWidth(SIDEBAR_NUDGE_PX)}
-                className="border-l border-[var(--sidebar-border)] p-1.5 text-[var(--sidebar-text-muted)] transition-colors hover:bg-[var(--sidebar-item-hover-bg)] hover:text-[var(--sidebar-text)]"
-                aria-label="Increase sidebar width"
-              >
-                <Plus size={14} strokeWidth={2.5} />
-              </button>
-            </div>
             <button
               type="button"
               onClick={() => setMobileOpen(false)}

@@ -28,6 +28,8 @@ interface AddEventModalProps {
   onSuccess: (event: any) => void;
   selectedDate?: string;
   editEvent?: CalendarEvent | null;
+  /** When true, only MEETING type and default 1h duration when a start time is set. */
+  meetingOnly?: boolean;
 }
 
 const EVENT_TYPES = [
@@ -67,7 +69,14 @@ const labelStyle = {
   letterSpacing: '0.04em',
 };
 
-export function AddEventModal({ isOpen, onClose, onSuccess, selectedDate, editEvent }: AddEventModalProps) {
+export function AddEventModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  selectedDate,
+  editEvent,
+  meetingOnly = false,
+}: AddEventModalProps) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -91,13 +100,15 @@ export function AddEventModal({ isOpen, onClose, onSuccess, selectedDate, editEv
         description: editEvent.description,
         date: editEvent.date,
         time: editEvent.time === 'All Day' ? '' : editEvent.time,
-        type: editEvent.type,
+        type: meetingOnly ? 'MEETING' : editEvent.type,
         location: editEvent.location || '',
       });
     } else if (selectedDate) {
-      setFormData(prev => ({ ...prev, date: selectedDate }));
+      setFormData(prev => ({ ...prev, date: selectedDate, type: meetingOnly ? 'MEETING' : prev.type }));
+    } else if (meetingOnly) {
+      setFormData(prev => ({ ...prev, type: 'MEETING' }));
     }
-  }, [isOpen, selectedDate, editEvent]);
+  }, [isOpen, selectedDate, editEvent, meetingOnly]);
 
   const loadCompanyMembers = async () => {
     try {
@@ -126,7 +137,13 @@ export function AddEventModal({ isOpen, onClose, onSuccess, selectedDate, editEv
     setError('');
     try {
       const startDateTime = formData.time ? `${formData.date}T${formData.time}:00` : `${formData.date}T00:00:00`;
-      const endDateTime = formData.time ? `${formData.date}T${formData.time}:00` : `${formData.date}T23:59:59`;
+      let endDateTime = formData.time ? `${formData.date}T${formData.time}:00` : `${formData.date}T23:59:59`;
+      if (meetingOnly && formData.time) {
+        const startMs = new Date(`${formData.date}T${formData.time}:00`).getTime();
+        const end = new Date(startMs + 60 * 60 * 1000);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        endDateTime = `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}:00`;
+      }
       const payload = {
         title: formData.title,
         description: formData.description,
@@ -186,7 +203,7 @@ export function AddEventModal({ isOpen, onClose, onSuccess, selectedDate, editEv
           <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5 text-white" />
             <h2 className="text-base font-bold text-white">
-              {isEditMode ? 'Edit Event' : 'Add New Event'}
+              {isEditMode ? (meetingOnly ? 'Edit meeting' : 'Edit Event') : meetingOnly ? 'Schedule meeting' : 'Add New Event'}
             </h2>
           </div>
           <button onClick={handleClose}
@@ -207,24 +224,33 @@ export function AddEventModal({ isOpen, onClose, onSuccess, selectedDate, editEv
           )}
 
           {/* Event Type */}
-          <div style={sectionStyle}>
-            <label style={labelStyle}>Event Type *</label>
-            <div className="grid grid-cols-3 gap-2">
-              {EVENT_TYPES.map(et => (
-                <button key={et.value} type="button"
-                  onClick={() => setFormData(f => ({ ...f, type: et.value as CalendarEvent['type'] }))}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all"
-                  style={{
-                    backgroundColor: formData.type === et.value ? 'var(--PRIMAry-subtle)' : 'var(--input-bg)',
-                    border: `1px solid ${formData.type === et.value ? 'var(--PRIMAry-color)' : 'var(--card-border)'}`,
-                    color: formData.type === et.value ? 'var(--PRIMAry-color)' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                  }}>
-                  <span>{et.icon}</span><span>{et.label}</span>
-                </button>
-              ))}
+          {!meetingOnly ? (
+            <div style={sectionStyle}>
+              <label style={labelStyle}>Event Type *</label>
+              <div className="grid grid-cols-3 gap-2">
+                {EVENT_TYPES.map(et => (
+                  <button key={et.value} type="button"
+                    onClick={() => setFormData(f => ({ ...f, type: et.value as CalendarEvent['type'] }))}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all"
+                    style={{
+                      backgroundColor: formData.type === et.value ? 'var(--PRIMAry-subtle)' : 'var(--input-bg)',
+                      border: `1px solid ${formData.type === et.value ? 'var(--PRIMAry-color)' : 'var(--card-border)'}`,
+                      color: formData.type === et.value ? 'var(--PRIMAry-color)' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                    }}>
+                    <span>{et.icon}</span><span>{et.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div
+              className="rounded-xl px-4 py-3 text-sm font-medium"
+              style={{ ...sectionStyle, backgroundColor: 'var(--PRIMAry-subtle)', color: 'var(--PRIMAry-color)' }}
+            >
+              👥 Meeting · default length 1 hour when a start time is set
+            </div>
+          )}
 
           {/* Title */}
           <div>

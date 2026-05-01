@@ -66,16 +66,21 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
     },
   });
 
-  const adminUser = await prisma.user.findUnique({ where: { email: "admin@PRIMA.com" } });
+  const adminUser = await prisma.user.findUnique({ where: { email: "admin@mailinator.com" } });
   if (!adminUser) {
-    console.warn("⚠️ admin@PRIMA.com not found — skip rich demo.");
+    console.warn("⚠️ admin@mailinator.com not found — skip rich demo.");
     return;
   }
 
+  const adminEmpOther = await prisma.employee.findUnique({ where: { userId: adminUser.id } });
+  if (adminEmpOther && adminEmpOther.employeeCode !== "EMP-0002") {
+    await prisma.employee.delete({ where: { id: adminEmpOther.id } });
+  }
   const adminEmployee = await prisma.employee.upsert({
-    where: { userId: adminUser.id },
+    where: { employeeCode: "EMP-0002" },
     update: {
-      name: "test3 case",
+      userId: adminUser.id,
+      name: "admin user",
       departmentId: itDept.id,
       companyId: company.id,
       designation: Designation.MANAGER,
@@ -85,7 +90,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       userId: adminUser.id,
       companyId: company.id,
       departmentId: itDept.id,
-      name: "test3 case",
+      name: "admin user",
       designation: Designation.MANAGER,
       employeeCode: "EMP-0002",
       isActive: true,
@@ -95,8 +100,8 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
   await prisma.user.update({
     where: { id: adminUser.id },
     data: {
-      firstName: "test3",
-      lastName: "case",
+      firstName: "admin",
+      lastName: "user",
       designation: "ADMIN",
       role: Role.ADMIN,
       status: "ACTIVE",
@@ -117,11 +122,12 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
     empCode: string;
     designation: Designation;
     userDesignation: string;
+    role?: Role;
   };
 
   const teamSeeds: TeamSeed[] = [
     {
-      email: "meenu.rani@PRIMA.com",
+      email: "employee.meenu@mailinator.com",
       firstName: "Meenu",
       lastName: "Rani",
       empCode: "EMP-MR01",
@@ -129,7 +135,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       userDesignation: "UI/UX Designer",
     },
     {
-      email: "raman.kumar@PRIMA.com",
+      email: "employee.raman@mailinator.com",
       firstName: "Raman",
       lastName: "Kumar",
       empCode: "EMP-RK01",
@@ -137,7 +143,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       userDesignation: "QA Engineer",
     },
     {
-      email: "mishri.rani@PRIMA.com",
+      email: "employee.mishri@mailinator.com",
       firstName: "Mishri",
       lastName: "Rani",
       empCode: "EMP-MI01",
@@ -145,7 +151,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       userDesignation: "Developer",
     },
     {
-      email: "raju.kumar@PRIMA.com",
+      email: "employee.raju@mailinator.com",
       firstName: "Raju",
       lastName: "Kumar",
       empCode: "EMP-RJ01",
@@ -153,15 +159,16 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       userDesignation: "UI/UX Designer",
     },
     {
-      email: "rakshi.kumari@PRIMA.com",
+      email: "manager.rakshi@mailinator.com",
       firstName: "Rakshi",
       lastName: "Kumari",
       empCode: "EMP-RS01",
       designation: Designation.MANAGER,
       userDesignation: "Product Manager",
+      role: Role.MANAGER,
     },
     {
-      email: "varun.sharma@PRIMA.com",
+      email: "employee.varun@mailinator.com",
       firstName: "Varun",
       lastName: "Sharma",
       empCode: "EMP-VS01",
@@ -169,7 +176,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       userDesignation: "QA Engineer",
     },
     {
-      email: "pooja.singh@PRIMA.com",
+      email: "employee.pooja@mailinator.com",
       firstName: "Pooja",
       lastName: "Singh",
       empCode: "EMP-PS01",
@@ -177,14 +184,40 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       userDesignation: "Backend Developer",
     },
     {
-      email: "amit.verma@PRIMA.com",
+      email: "employee.amit@mailinator.com",
       firstName: "Amit",
       lastName: "Verma",
       empCode: "EMP-AV01",
       designation: Designation.SOFTWARE_ENGINEER,
       userDesignation: "DevOps Engineer",
     },
+    {
+      email: "hr.sonia@mailinator.com",
+      firstName: "Sonia",
+      lastName: "Verma",
+      empCode: "EMP-HR01",
+      designation: Designation.HR,
+      userDesignation: "HR Business Partner",
+    },
   ];
+
+  const legacyTeamEmailMigrations: [string, string][] = [
+    ["meenu.rani@mailinator.com", "employee.meenu@mailinator.com"],
+    ["raman.kumar@mailinator.com", "employee.raman@mailinator.com"],
+    ["mishri.rani@mailinator.com", "employee.mishri@mailinator.com"],
+    ["raju.kumar@mailinator.com", "employee.raju@mailinator.com"],
+    ["rakshi.kumari@mailinator.com", "manager.rakshi@mailinator.com"],
+    ["varun.sharma@mailinator.com", "employee.varun@mailinator.com"],
+    ["pooja.singh@mailinator.com", "employee.pooja@mailinator.com"],
+    ["amit.verma@mailinator.com", "employee.amit@mailinator.com"],
+  ];
+  for (const [fromEmail, toEmail] of legacyTeamEmailMigrations) {
+    const prev = await prisma.user.findUnique({ where: { email: fromEmail } });
+    const taken = await prisma.user.findUnique({ where: { email: toEmail } });
+    if (prev && prev.companyId === company.id && !taken) {
+      await prisma.user.update({ where: { id: prev.id }, data: { email: toEmail } });
+    }
+  }
 
   const teamEmployees: { id: number; name: string; email: string }[] = [];
 
@@ -196,7 +229,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
         lastName: t.lastName,
         designation: t.userDesignation,
         phone: "+919000000001",
-        role: Role.EMPLOYEE,
+        role: t.role ?? Role.EMPLOYEE,
         status: "ACTIVE",
         isActive: true,
         companyId: company.id,
@@ -209,20 +242,27 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
         designation: t.userDesignation,
         phone: "+919000000001",
         password: passwordHash,
-        role: Role.EMPLOYEE,
+        role: t.role ?? Role.EMPLOYEE,
         status: "ACTIVE",
         isActive: true,
         companyId: company.id,
       },
     });
 
+    const teamEmpOther = await prisma.employee.findUnique({ where: { userId: user.id } });
+    if (teamEmpOther && teamEmpOther.employeeCode !== t.empCode) {
+      await prisma.employee.delete({ where: { id: teamEmpOther.id } });
+    }
     const emp = await prisma.employee.upsert({
-      where: { userId: user.id },
+      where: { employeeCode: t.empCode },
       update: {
+        userId: user.id,
         name: `${t.firstName} ${t.lastName}`,
         designation: t.designation,
+        companyId: company.id,
         departmentId: itDept.id,
         isActive: true,
+        managerId: adminEmployee.id,
       },
       create: {
         userId: user.id,
@@ -270,7 +310,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       description: "Checkout and catalog experience",
       companyId: company.id,
       departmentId: itDept.id,
-      ownerId: byEmail("raman.kumar@PRIMA.com").id,
+      ownerId: byEmail("raman.kumar@mailinator.com").id,
       code: `${DEMO_PREFIX}-ECOM`,
       status: ProjectStatus.ACTIVE,
       startDate: utc(2026, 2, 15),
@@ -302,7 +342,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       description: "Internal admin and RBAC",
       companyId: company.id,
       departmentId: itDept.id,
-      ownerId: byEmail("raju.kumar@PRIMA.com").id,
+      ownerId: byEmail("raju.kumar@mailinator.com").id,
       code: `${DEMO_PREFIX}-ADM`,
       status: ProjectStatus.ACTIVE,
       startDate: utc(2026, 3, 20),
@@ -338,7 +378,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       title: "Design homepage UI",
       description: "Create responsive homepage design in Figma",
       projectId: pWeb.id,
-      assignEmail: "meenu.rani@PRIMA.com",
+      assignEmail: "employee.meenu@mailinator.com",
       status: TaskStatus.IN_PROGRESS,
       priority: TaskPriority.HIGH,
       due: utc(2026, 5, 5),
@@ -348,7 +388,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       title: "API integration",
       description: "Integrate payment gateway APIs",
       projectId: pEcom.id,
-      assignEmail: "raman.kumar@PRIMA.com",
+      assignEmail: "employee.raman@mailinator.com",
       status: TaskStatus.TODO,
       priority: TaskPriority.MEDIUM,
       due: utc(2026, 5, 8),
@@ -358,7 +398,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       title: "Fix login issue",
       description: "Resolve login bug on mobile devices",
       projectId: pMobile.id,
-      assignEmail: "mishri.rani@PRIMA.com",
+      assignEmail: "employee.mishri@mailinator.com",
       status: TaskStatus.IN_PROGRESS,
       priority: TaskPriority.HIGH,
       due: utc(2026, 4, 18),
@@ -368,7 +408,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       title: "Database optimization",
       description: "Optimize database queries",
       projectId: pAdmin.id,
-      assignEmail: "raju.kumar@PRIMA.com",
+      assignEmail: "employee.raju@mailinator.com",
       status: TaskStatus.IN_REVIEW,
       priority: TaskPriority.MEDIUM,
       due: utc(2026, 5, 10),
@@ -378,7 +418,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       title: "User role management",
       description: "Implement user roles and permissions",
       projectId: pAdmin.id,
-      assignEmail: "rakshi.kumari@PRIMA.com",
+      assignEmail: "manager.rakshi@mailinator.com",
       status: TaskStatus.TODO,
       priority: TaskPriority.LOW,
       due: utc(2026, 5, 12),
@@ -388,7 +428,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       title: "Write unit tests",
       description: "Add unit tests for auth module",
       projectId: pMobile.id,
-      assignEmail: "varun.sharma@PRIMA.com",
+      assignEmail: "employee.varun@mailinator.com",
       status: TaskStatus.TODO,
       priority: TaskPriority.MEDIUM,
       due: utc(2026, 4, 19),
@@ -928,7 +968,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
       meta: { status: "COMPLETED", kind: "TEAM", project: "Admin Panel", participants: 5 },
       start: utc(2026, 4, 22, 16),
       end: utc(2026, 4, 22, 17),
-      organizerId: byEmail("raju.kumar@PRIMA.com").id,
+      organizerId: byEmail("employee.raju@mailinator.com").id,
       attendees: 5,
     },
     {
@@ -1071,5 +1111,7 @@ export async function seedRichDemo(prisma: PrismaClient, passwordHash: string): 
   console.log(
     `✅ Rich demo: ${teamEmployees.length} team members, 4 projects, ${taskDefs.length} tasks, attendance, leaves, notifications, meetings, timesheets, reports, approvals.`
   );
-  console.log("   Team logins (password Admin@123): meenu.rani@PRIMA.com, raman.kumar@PRIMA.com, …");
+  console.log(
+    "   PRIMA team logins (password Admin@123): employee.meenu@…, manager.rakshi@…, hr.sonia@…; company admin hr.test3@mailinator.com"
+  );
 }

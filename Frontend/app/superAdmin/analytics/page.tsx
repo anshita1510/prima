@@ -8,7 +8,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell, Area, AreaChart
 } from 'recharts';
 import {
-  TrendingUp, Users, Building, Activity, RefreshCw, Shield, Link2, ServerCrash
+  TrendingUp, Users, Building, Activity, RefreshCw, Link2, Crown
 } from 'lucide-react';
 import { analyticsService, AnalyticsData, TimePeriod } from '@/app/services/analytics.service';
 
@@ -70,14 +70,14 @@ export default function AnalyticsPage() {
       const endDate = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
 
       const formatOpts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-      return `${startDate.toLocaleDateString('en-US', formatOpts)} - ${endDate.toLocaleDateString('en-US', formatOpts)}`;
+      return `${startDate.toLocaleDateString('en-US', formatOpts)} to ${endDate.toLocaleDateString('en-US', formatOpts)}`;
     } else if (selectedPeriod === 'monthly') {
       const targetDate = new Date(now.getFullYear(), now.getMonth() - offset, 1);
       return targetDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     } else if (selectedPeriod === 'yearly') {
       return (now.getFullYear() - offset).toString();
     }
-    return `-${offset}`;
+    return `Prior ${offset}`;
   };
 
   // Theming & Styles Custom CSS Variables mapped per Antygravity layout
@@ -139,7 +139,7 @@ export default function AnalyticsPage() {
                 className="px-3 py-1.5 text-xs font-semibold text-[var(--text-muted)] hover:bg-[#3b82f6] hover:text-white transition-all"
                 title={`Previous ${getPeriodDisplayName()}`}
               >
-                &larr; Prev
+                Prev
               </button>
               <div className="px-3 py-1.5 text-xs font-medium text-[var(--text-color)] min-w-[80px] text-center border-x border-[var(--card-border)] whitespace-nowrap">
                 {getOffsetLabel()}
@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
                 className="px-3 py-1.5 text-xs font-semibold text-[var(--text-muted)] hover:bg-[#3b82f6] hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 title={`Next ${getPeriodDisplayName()}`}
               >
-                Next &rarr;
+                Next
               </button>
             </div>
 
@@ -187,8 +187,8 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {[
                 { label: `Total Companies (${getPeriodDisplayName()})`, value: analyticsData.currentTotals.totalCompanies.toLocaleString(), sub: 'Isolated tenants', icon: Building, color: '#10b981', trendData: analyticsData.companyRegistrations.map(r => ({ period: formatPeriodLabel(r.period), val: r.total })) },
-                { label: `Platform Users (${getPeriodDisplayName()})`, value: analyticsData.currentTotals.totalUsers.toLocaleString(), sub: `Active global users`, icon: Users, color: '#3b82f6', trendData: analyticsData.userRegistrations.map(r => ({ period: formatPeriodLabel(r.period), val: r.total })) },
-                { label: `Admin Workforce (${getPeriodDisplayName()})`, value: analyticsData.currentTotals.totalAdmins.toLocaleString(), sub: 'Managing ecosystem', icon: Shield, color: '#8b5cf6', trendData: analyticsData.userRegistrations.map(r => ({ period: formatPeriodLabel(r.period), val: r.admins })) },
+                { label: `Leadership users (${getPeriodDisplayName()})`, value: analyticsData.currentTotals.totalUsers.toLocaleString(), sub: `CEO, manager, HR, admin (no employees)`, icon: Users, color: '#3b82f6', trendData: analyticsData.userRegistrations.map(r => ({ period: formatPeriodLabel(r.period), val: r.total })) },
+                { label: `CEO accounts`, value: (analyticsData.currentTotals.totalCeos ?? 0).toLocaleString(), sub: 'Tenant company heads', icon: Crown, color: '#a855f7', trendData: analyticsData.companyRegistrations.map(r => ({ period: formatPeriodLabel(r.period), val: r.total })) },
                 { label: `System Activity (${getPeriodDisplayName()})`, value: analyticsData.activityTrends.reduce((sum, item) => sum + item.activity, 0).toLocaleString(), sub: 'Recorded updates', icon: Link2, color: '#f59e0b', trendData: analyticsData.activityTrends.map(r => ({ period: formatPeriodLabel(r.period), val: r.activity })) }
               ].map((kpi, i) => (
                 <div key={i} className="rounded-2xl flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative"
@@ -272,9 +272,10 @@ export default function AnalyticsPage() {
                     <YAxis allowDecimals={false} stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'var(--text-muted)', opacity: 0.1 }} />
                     <Legend wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
-                    <Bar dataKey="admins" fill="#3B82F6" name="Admins" maxBarSize={40} radius={[4, 4, 0, 0]} animationDuration={1500} />
+                    <Bar dataKey="ceos" fill="#F59E0B" name="CEOs" maxBarSize={40} radius={[4, 4, 0, 0]} animationDuration={1500} />
                     <Bar dataKey="managers" fill="#10B981" name="Managers" maxBarSize={40} radius={[4, 4, 0, 0]} animationDuration={1500} />
-                    <Bar dataKey="employees" fill="#F59E0B" name="Employees" maxBarSize={40} radius={[4, 4, 0, 0]} animationDuration={1500} />
+                    <Bar dataKey="hr" fill="#EC4899" name="HR" maxBarSize={40} radius={[4, 4, 0, 0]} animationDuration={1500} />
+                    <Bar dataKey="otherAdmins" fill="#3B82F6" name="Other admins" maxBarSize={40} radius={[4, 4, 0, 0]} animationDuration={1500} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

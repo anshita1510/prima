@@ -98,7 +98,7 @@ export const authService = {
   // Quick login with real admin user (for testing)
   async quickAdminLogin() {
     try {
-      const response = await this.login('admin@PRIMA.com', 'Admin@123');
+      const response = await this.login('ceo.tnt01@mailinator.com', 'Admin@123');
       return response;
     } catch (error: any) {
       console.error('Quick admin login error:', error);

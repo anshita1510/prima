@@ -53,7 +53,7 @@ export default function UserManagementStats({ refreshKey = 0 }: Props) {
     {
       label: 'Total users',
       value: stats.total,
-      trend: loading ? '…' : 'All accounts in directory',
+      trend: loading ? '…' : 'All workspace accounts',
     },
     {
       label: 'Active now',

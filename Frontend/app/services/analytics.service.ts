@@ -13,8 +13,9 @@ export interface AnalyticsData {
   currentTotals: {
     totalUsers: number;
     totalAdmins: number;
+    totalCeos: number;
     totalManagers: number;
-    totalEmployees: number;
+    totalHr: number;
     totalCompanies: number;
     activeUsers: number;
   };
@@ -23,9 +24,10 @@ export interface AnalyticsData {
 export interface UserRegistrationData {
   period: string;
   total: number;
-  admins: number;
+  ceos: number;
   managers: number;
-  employees: number;
+  hr: number;
+  otherAdmins: number;
 }
 
 export interface CompanyRegistrationData {

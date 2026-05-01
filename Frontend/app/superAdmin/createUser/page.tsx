@@ -1,5 +1,5 @@
-import CreateUserSuperAdmin from "../_components/CreateUserSuperAdmin";
+import { redirect } from "next/navigation";
 
-export default function CreateUserPage() {
-  return <CreateUserSuperAdmin />;
+export default function SuperAdminCreateUserPage() {
+  redirect("/superAdmin");
 }

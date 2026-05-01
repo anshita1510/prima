@@ -1,6 +1,7 @@
 import { PrismaClient, Role, DepartmentType, Designation } from '@prisma/client'
 import bcrypt from 'bcrypt'
-import { seedRichDemo } from './seedRichDemo'
+import { seedSuperAdminWorld } from './seedSuperAdminWorld'
+import { seedDemoMeetings } from './seedMeetings'
 
 const prisma = new PrismaClient()
 
@@ -39,10 +40,10 @@ async function main(): Promise<void> {
 
   // 4️⃣ Create SUPER ADMIN User
   const superAdminUser = await prisma.user.upsert({
-    where: { email: 'superadmin@PRIMA.com' },
+    where: { email: 'superadmin@mailinator.com' },
     update: {},
     create: {
-      email: 'superadmin@PRIMA.com',
+      email: 'superadmin@mailinator.com',
       firstName: 'Super',
       lastName: 'Admin',
       phone: '+1234567890',
@@ -55,10 +56,22 @@ async function main(): Promise<void> {
     },
   })
 
-  // 5️⃣ Create Employee profile
+  // 5️⃣ Employee for super admin — upsert by employeeCode so re-seeding after an email
+  //    change does not try to create a second EMP-0001 (unique on employeeCode / userId).
+  const superOther = await prisma.employee.findUnique({ where: { userId: superAdminUser.id } })
+  if (superOther && superOther.employeeCode !== 'EMP-0001') {
+    await prisma.employee.delete({ where: { id: superOther.id } })
+  }
   const superAdminEmployee = await prisma.employee.upsert({
-    where: { userId: superAdminUser.id },
-    update: {},
+    where: { employeeCode: 'EMP-0001' },
+    update: {
+      userId: superAdminUser.id,
+      companyId: company.id,
+      departmentId: itDepartment.id,
+      name: 'Super Admin',
+      designation: Designation.DIRECTOR,
+      isActive: true,
+    },
     create: {
       userId: superAdminUser.id,
       companyId: company.id,
@@ -78,49 +91,16 @@ async function main(): Promise<void> {
     },
   })
 
-  // 7️⃣ Create ADMIN + MANAGER User for testing
-  const adminManagerUser = await prisma.user.upsert({
-    where: { email: 'admin@PRIMA.com' },
-    update: {},
-    create: {
-      email: 'admin@PRIMA.com',
-      firstName: 'Admin',
-      lastName: 'Manager',
-      phone: '+1234567891',
-      designation: 'MANAGER',
-      password: passwordHash,
-      role: Role.ADMIN,
-      status: 'ACTIVE',
-      isActive: true,
-      companyId: company.id
-    },
-  })
-
-  // 8️⃣ Create Employee profile for Admin Manager
-  const adminManagerEmployee = await prisma.employee.upsert({
-    where: { userId: adminManagerUser.id },
-    update: {},
-    create: {
-      userId: adminManagerUser.id,
-      companyId: company.id,
-      departmentId: itDepartment.id,
-      name: 'Admin Manager',
-      designation: Designation.MANAGER,
-      employeeCode: 'EMP-0002',
-      isActive: true,
-    },
-  })
-
-  await seedRichDemo(prisma, passwordHash)
+  await seedSuperAdminWorld(prisma, passwordHash)
+  await seedDemoMeetings(prisma)
 
   console.log('✅ Seeding completed successfully')
   console.log('👤 SUPER ADMIN LOGIN:')
-  console.log('📧 Email: superadmin@PRIMA.com')
+  console.log('📧 Email: superadmin@mailinator.com')
   console.log('🔑 Password: Admin@123')
   console.log('')
-  console.log('👤 ADMIN MANAGER LOGIN:')
-  console.log('📧 Email: admin@PRIMA.com')
-  console.log('🔑 Password: Admin@123')
+  console.log('👤 CEO TENANTS: ceo.tnt01@mailinator.com … ceo.tnt20@mailinator.com (Admin@123)')
+  console.log('📅 Demo MEETING rows seeded per company — visible under Admin → Meetings after login.')
 }
 
 main()

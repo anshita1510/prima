@@ -1,12 +1,7 @@
 'use client';
 
-import AdminModuleShell from '../_components/AdminModuleShell';
+import MeetingsDashboard from '../_components/MeetingsDashboard';
 
 export default function MeetingsPage() {
-  return (
-    <AdminModuleShell
-      title="Meetings"
-      subtitle="Schedule one-on-ones and team meetings."
-    />
-  );
+  return <MeetingsDashboard />;
 }

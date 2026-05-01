@@ -1,447 +1,444 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import Sidebar from "./_components/sidebar_u";
-import { 
-  BarChart3, 
-  CheckSquare, 
-  Clock, 
-  TrendingUp, 
+import {
+  BarChart3,
+  CheckSquare,
+  Clock,
+  TrendingUp,
   Calendar,
   FolderOpen,
   Target,
   Activity,
   PlayCircle,
   MessageSquare,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  RefreshCw,
 } from 'lucide-react';
 import { authService } from '@/app/services/authService';
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import {
+  userDashboardService,
+  type EmployeeDashboardPayload,
+} from '@/app/services/userDashboard.service';
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   Area,
-  AreaChart
+  ComposedChart,
+  Line,
 } from 'recharts';
 
-interface DashboardStats {
-  myTasks: number;
-  completedTasks: number;
-  inProgressTasks: number;
-  overdueTasks: number;
-  hoursLogged: number;
-  attendanceRate: number;
+const CHART_TOOLTIP = {
+  contentStyle: {
+    backgroundColor: 'var(--card-bg)',
+    border: '1px solid var(--card-border)',
+    borderRadius: 10,
+    color: 'var(--text-color)',
+  },
+};
+
+const BAR_BLUE = '#3b82f6';
+const GREEN = '#10b981';
+const RED = '#ef4444';
+const SLATE = '#94a3b8';
+
+function getActivityIcon(type: EmployeeDashboardPayload['recentActivity'][0]['type']) {
+  switch (type) {
+    case 'task_completed':
+      return <CheckSquare className="h-4 w-4 text-emerald-500" />;
+    case 'task_started':
+      return <PlayCircle className="h-4 w-4 text-blue-500" />;
+    case 'time_logged':
+      return <Clock className="h-4 w-4 text-amber-500" />;
+    case 'comment_added':
+      return <MessageSquare className="h-4 w-4 text-violet-500" />;
+    default:
+      return <Activity className="h-4 w-4 text-muted-foreground" />;
+  }
 }
 
-interface RecentActivity {
-  id: string;
-  type: 'task_completed' | 'task_started' | 'time_logged' | 'comment_added';
-  title: string;
-  description: string;
-  timestamp: string;
-  user: string;
-}
+const emptyPayload: EmployeeDashboardPayload = {
+  summary: {
+    myTasks: 0,
+    completedTasks: 0,
+    inProgressTasks: 0,
+    overdueTasks: 0,
+    hoursThisWeek: 0,
+    completionRate: 0,
+  },
+  weeklyAttendance: [
+    { day: 'Mon', hours: 0, status: '—' },
+    { day: 'Tue', hours: 0, status: '—' },
+    { day: 'Wed', hours: 0, status: '—' },
+    { day: 'Thu', hours: 0, status: '—' },
+    { day: 'Fri', hours: 0, status: '—' },
+    { day: 'Sat', hours: 0, status: 'Weekend' },
+    { day: 'Sun', hours: 0, status: 'Weekend' },
+  ],
+  taskDistribution: [
+    { name: 'Completed', value: 0, color: GREEN },
+    { name: 'In Progress', value: 0, color: BAR_BLUE },
+    { name: 'Overdue', value: 0, color: RED },
+  ],
+  monthlyProgress: [],
+  productivityTrend: [],
+  recentActivity: [],
+};
 
 export default function UserDashboard() {
-  const [stats, setStats] = useState<DashboardStats>({
-    myTasks: 12,
-    completedTasks: 8,
-    inProgressTasks: 3,
-    overdueTasks: 1,
-    hoursLogged: 38,
-    attendanceRate: 96
-  });
-  
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [data, setData] = useState<EmployeeDashboardPayload>(emptyPayload);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<{ name?: string; firstName?: string; lastName?: string } | null>(null);
 
-  // Chart data
-  const attendanceData = [
-    { day: 'Mon', hours: 8.5, status: 'Present' },
-    { day: 'Tue', hours: 9.0, status: 'Present' },
-    { day: 'Wed', hours: 7.5, status: 'Present' },
-    { day: 'Thu', hours: 8.0, status: 'Present' },
-    { day: 'Fri', hours: 9.5, status: 'Present' },
-    { day: 'Sat', hours: 0, status: 'Weekend' },
-    { day: 'Sun', hours: 0, status: 'Weekend' }
-  ];
-
-  const taskCompletionData = [
-    { name: 'Completed', value: stats.completedTasks, color: '#10b981' },
-    { name: 'In Progress', value: stats.inProgressTasks, color: '#3b82f6' },
-    { name: 'Overdue', value: stats.overdueTasks, color: '#ef4444' }
-  ];
-
-  const weeklyProgressData = [
-    { week: 'Week 1', completed: 5, assigned: 8 },
-    { week: 'Week 2', completed: 7, assigned: 10 },
-    { week: 'Week 3', completed: 6, assigned: 9 },
-    { week: 'Week 4', completed: 8, assigned: 12 }
-  ];
-
-  const productivityData = [
-    { month: 'Jan', tasks: 12, hours: 160 },
-    { month: 'Feb', tasks: 15, hours: 168 },
-    { month: 'Mar', tasks: 18, hours: 172 },
-    { month: 'Apr', tasks: 14, hours: 165 },
-    { month: 'May', tasks: 20, hours: 180 },
-    { month: 'Jun', tasks: 16, hours: 170 }
-  ];
-
-  useEffect(() => {
-    const currentUser = authService.getStoredUser();
-    setUser(currentUser);
-    loadDashboardData();
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const me = await authService.getCurrentUser();
+      if (me.success && me.user) setUser(me.user);
+      else setUser(authService.getStoredUser());
+    } catch {
+      setUser(authService.getStoredUser());
+    }
+    const res = await userDashboardService.fetchEmployeeDashboard();
+    if (res.success && res.data) {
+      setData(res.data);
+    } else {
+      setData(emptyPayload);
+      setError(res.message || 'Could not load live metrics');
+    }
+    setLoading(false);
   }, []);
 
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true);
-      
-      setRecentActivity([
-        {
-          id: '1',
-          type: 'task_completed',
-          title: 'Task Completed',
-          description: 'User interface design task was completed',
-          timestamp: '2 hours ago',
-          user: user?.name || 'You'
-        },
-        {
-          id: '2',
-          type: 'task_started',
-          title: 'Task Started',
-          description: 'Backend API development task was started',
-          timestamp: '4 hours ago',
-          user: user?.name || 'You'
-        },
-        {
-          id: '3',
-          type: 'time_logged',
-          title: 'Time Logged',
-          description: '3 hours logged for database optimization',
-          timestamp: '6 hours ago',
-          user: user?.name || 'You'
-        }
-      ]);
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const getActivityIcon = (type: RecentActivity['type']) => {
-    switch (type) {
-      case 'task_completed':
-        return <CheckSquare className="w-4 h-4 text-green-500" />;
-      case 'task_started':
-        return <PlayCircle className="w-4 h-4 text-blue-500" />;
-      case 'time_logged':
-        return <Clock className="w-4 h-4 text-orange-500" />;
-      case 'comment_added':
-        return <MessageSquare className="w-4 h-4 text-purple-500" />;
-      default:
-        return <Activity className="w-4 h-4 text-gray-500" />;
-    }
-  };
+  const displayName =
+    user?.name ||
+    [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() ||
+    'Employee';
 
-  const completionRate = stats.myTasks > 0 ? (stats.completedTasks / stats.myTasks) * 100 : 0;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Sidebar />
-        <div className="lg:ml-16 min-h-screen">
-          <div className="p-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const { summary, weeklyAttendance, taskDistribution, monthlyProgress, productivityTrend, recentActivity } = data;
+  const completionRate = summary.completionRate;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      
-      <div className="lg:ml-16 min-h-screen pt-16 lg:pt-0">
-        {/* Page Header */}
-        <div className="border-b border-gray-200 bg-white px-4 sm:px-6 py-4 sticky top-0 z-10">
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back, {user?.name || 'Employee'}</p>
+    <>
+      <header
+        className="mb-6 border-b pb-4"
+        style={{ borderColor: 'var(--card-border)' }}
+      >
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-color)' }}>
+          Dashboard
+        </h1>
+        <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
+          Welcome back, {displayName}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => load()} disabled={loading}>
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
-        
-        {/* Dashboard Content */}
-        <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">My Tasks</CardTitle>
-                <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{stats.myTasks}</div>
-                <p className="text-xs text-muted-foreground">
-                  {stats.inProgressTasks} in progress
+      </header>
+
+      {error ? (
+        <div
+          className="mb-6 rounded-xl border px-4 py-3 text-sm"
+          style={{
+            borderColor: 'rgba(239,68,68,0.35)',
+            backgroundColor: 'rgba(239,68,68,0.08)',
+            color: '#b91c1c',
+          }}
+        >
+          {error}
+        </div>
+      ) : null}
+
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">My Tasks</CardTitle>
+              <CheckSquare className="h-4 w-4 opacity-70" style={{ color: 'var(--text-muted)' }} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold" style={{ color: BAR_BLUE }}>
+                {loading ? '—' : summary.myTasks}
+              </div>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {summary.inProgressTasks} in progress
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completed</CardTitle>
+              <CheckSquare className="h-4 w-4 opacity-70" style={{ color: 'var(--text-muted)' }} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600">{loading ? '—' : summary.completedTasks}</div>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Tasks finished
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+              <TrendingUp className="h-4 w-4 opacity-70" style={{ color: 'var(--text-muted)' }} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold" style={{ color: 'var(--PRIMAry-color)' }}>
+                {loading ? '—' : `${completionRate.toFixed(1)}%`}
+              </div>
+              <Progress value={Math.min(100, completionRate)} className="mt-2 h-2" />
+            </CardContent>
+          </Card>
+
+          <Card className="border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Hours This Week</CardTitle>
+              <Clock className="h-4 w-4 opacity-70" style={{ color: 'var(--text-muted)' }} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">{loading ? '—' : summary.hoursThisWeek}</div>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Time logged
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Card className="border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BarChart3 className="h-5 w-5" style={{ color: 'var(--PRIMAry-color)' }} />
+                Weekly Attendance
+              </CardTitle>
+              <CardDescription>Your work hours this week</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyAttendance} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="barFillEmp" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={BAR_BLUE} stopOpacity={1} />
+                      <stop offset="100%" stopColor={BAR_BLUE} stopOpacity={0.55} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
+                  <XAxis dataKey="day" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} domain={[0, 12]} />
+                  <Tooltip
+                    {...CHART_TOOLTIP}
+                    formatter={(v: number | undefined) => [`${v ?? 0} h`, 'Hours']}
+                  />
+                  <Bar dataKey="hours" fill="url(#barFillEmp)" radius={[10, 10, 0, 0]} maxBarSize={48} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <PieChartIcon className="h-5 w-5" style={{ color: 'var(--PRIMAry-color)' }} />
+                Task Distribution
+              </CardTitle>
+              <CardDescription>Current task status breakdown</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={
+                      taskDistribution.some((d) => d.value > 0)
+                        ? taskDistribution.filter((d) => d.value > 0)
+                        : [{ name: 'No tasks', value: 1, color: '#e2e8f0' }]
+                    }
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={56}
+                    outerRadius={96}
+                    paddingAngle={3}
+                    dataKey="value"
+                    nameKey="name"
+                    label={({ name, percent }) =>
+                      taskDistribution.some((d) => d.value > 0)
+                        ? `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
+                        : 'No data'
+                    }
+                  >
+                    {(taskDistribution.some((d) => d.value > 0) ? taskDistribution : [{ name: 'No tasks', value: 1, color: '#e2e8f0' }]).map(
+                      (entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="var(--card-bg)" strokeWidth={1} />
+                      )
+                    )}
+                  </Pie>
+                  <Tooltip {...CHART_TOOLTIP} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Card className="border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <TrendingUp className="h-5 w-5" style={{ color: 'var(--PRIMAry-color)' }} />
+                Monthly Progress
+              </CardTitle>
+              <CardDescription>Tasks completed vs assigned (rolling weeks)</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyProgress.length ? monthlyProgress : [{ week: '—', completed: 0, assigned: 0 }]} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
+                  <XAxis dataKey="week" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip {...CHART_TOOLTIP} />
+                  <Legend />
+                  <Bar dataKey="assigned" name="Assigned" fill={SLATE} radius={[8, 8, 0, 0]} maxBarSize={36} />
+                  <Bar dataKey="completed" name="Completed" fill={GREEN} radius={[8, 8, 0, 0]} maxBarSize={36} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Activity className="h-5 w-5" style={{ color: 'var(--PRIMAry-color)' }} />
+                Productivity Trend
+              </CardTitle>
+              <CardDescription>Tasks completed vs hours logged by month</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={productivityTrend.length ? productivityTrend : [{ month: '—', tasks: 0, hours: 0 }]}
+                  margin={{ top: 8, right: 12, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="left" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip {...CHART_TOOLTIP} />
+                  <Legend />
+                  <Area
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="tasks"
+                    name="Tasks"
+                    stroke={BAR_BLUE}
+                    fill={BAR_BLUE}
+                    fillOpacity={0.12}
+                    strokeWidth={2}
+                  />
+                  <Line yAxisId="right" type="monotone" dataKey="hours" name="Hours" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <Card className="border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Target className="h-5 w-5" style={{ color: 'var(--PRIMAry-color)' }} />
+                Quick Actions
+              </CardTitle>
+              <CardDescription>Shortcuts</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button className="w-full justify-start" variant="outline" asChild>
+                <a href="/user/tasks">
+                  <CheckSquare className="mr-2 h-4 w-4" />
+                  View My Tasks
+                </a>
+              </Button>
+              <Button className="w-full justify-start" variant="outline" asChild>
+                <a href="/user/projects">
+                  <FolderOpen className="mr-2 h-4 w-4" />
+                  My Projects
+                </a>
+              </Button>
+              <Button className="w-full justify-start" variant="outline" asChild>
+                <a href="/user/attendance">
+                  <Clock className="mr-2 h-4 w-4" />
+                  Attendance
+                </a>
+              </Button>
+              <Button className="w-full justify-start" variant="outline" asChild>
+                <a href="/user/leave-management">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Leave
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Activity className="h-5 w-5" style={{ color: 'var(--PRIMAry-color)' }} />
+                Recent activity
+              </CardTitle>
+              <CardDescription>From your completed work</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {recentActivity.length === 0 ? (
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  No recent completions yet.
                 </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{stats.completedTasks}</div>
-                <p className="text-xs text-muted-foreground">
-                  Tasks finished
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-purple-600">{completionRate.toFixed(1)}%</div>
-                <Progress value={completionRate} className="mt-2" />
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Hours This Week</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{stats.hoursLogged}</div>
-                <p className="text-xs text-muted-foreground">
-                  Time logged
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Charts Row 1 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Weekly Attendance Chart */}
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Weekly Attendance
-                </CardTitle>
-                <CardDescription>
-                  Your work hours this week
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={attendanceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="hours" fill="#3b82f6" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Task Distribution Pie Chart */}
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChartIcon className="h-5 w-5" />
-                  Task Distribution
-                </CardTitle>
-                <CardDescription>
-                  Current task status breakdown
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={taskCompletionData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
+              ) : (
+                <ul className="space-y-3">
+                  {recentActivity.map((a) => (
+                    <li
+                      key={a.id}
+                      className="flex gap-3 rounded-lg border p-3 transition-colors hover:bg-[var(--bg-subtle)]"
+                      style={{ borderColor: 'var(--card-border)' }}
                     >
-                      {taskCompletionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Charts Row 2 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Weekly Progress Chart */}
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Monthly Progress
-                </CardTitle>
-                <CardDescription>
-                  Tasks completed vs assigned
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={weeklyProgressData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="week" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="assigned" fill="#94a3b8" radius={[8, 8, 0, 0]} />
-                    <Bar dataKey="completed" fill="#10b981" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Productivity Trend */}
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Productivity Trend
-                </CardTitle>
-                <CardDescription>
-                  Tasks and hours over time
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={productivityData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Area type="monotone" dataKey="tasks" stackId="1" stroke="#8b5cf6" fill="#8b5cf6" />
-                    <Area type="monotone" dataKey="hours" stackId="2" stroke="#3b82f6" fill="#3b82f6" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            {/* Quick Actions */}
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Quick Actions
-                </CardTitle>
-                <CardDescription>
-                  Common tasks and shortcuts
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button className="w-full justify-start" variant="outline" asChild>
-                  <a href="/user/tasks">
-                    <CheckSquare className="mr-2 h-4 w-4" />
-                    View My Tasks
-                  </a>
-                </Button>
-                <Button className="w-full justify-start" variant="outline" asChild>
-                  <a href="/user/projects">
-                    <FolderOpen className="mr-2 h-4 w-4" />
-                    My Projects
-                  </a>
-                </Button>
-                <Button className="w-full justify-start" variant="outline" asChild>
-                  <a href="/user/attendance">
-                    <Clock className="mr-2 h-4 w-4" />
-                    Check Attendance
-                  </a>
-                </Button>
-                <Button className="w-full justify-start" variant="outline" asChild>
-                  <a href="/user/leave-management">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Request Leave
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card className="lg:col-span-2 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  My Recent Activity
-                </CardTitle>
-                <CardDescription>
-                  Your latest actions and updates
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivity.map((activity) => (
-                    <div 
-                      key={activity.id} 
-                      className="flex items-start space-x-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="mt-1">
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div className="flex-1 space-y-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{activity.title}</p>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {activity.description}
+                      <div className="mt-0.5">{getActivityIcon(a.type)}</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-color)' }}>
+                          {a.title}
                         </p>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <span>{activity.user}</span>
-                          <span>•</span>
-                          <span>{activity.timestamp}</span>
-                        </div>
+                        <p className="truncate text-sm" style={{ color: 'var(--text-muted)' }}>
+                          {a.description}
+                        </p>
+                        <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                          {a.user} · {a.timestamp}
+                        </p>
                       </div>
-                    </div>
+                    </li>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                </ul>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </div>
+    </>
   );
 }

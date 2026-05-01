@@ -64,6 +64,8 @@ router.post('/seed', authenticateToken, authorize(Role.SUPER_ADMIN), dashboardCo
  */
 router.get('/admin-stats', authenticateToken, authorize(Role.ADMIN), dashboardController.getAdminDashboardStats);
 
+router.get('/employee', authenticateToken, dashboardController.getEmployeeDashboard);
+
 /**
  * @swagger
  * /api/dashboard/debug:

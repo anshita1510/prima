@@ -2,6 +2,7 @@ import { PrismaClient, Role, DepartmentType, Designation } from '@prisma/client'
 import bcrypt from 'bcrypt'
 import { seedSuperAdminWorld } from './seedSuperAdminWorld'
 import { seedDemoMeetings } from './seedMeetings'
+import { seedEmployee2Dashboard } from './seedEmployee2Dashboard'
 
 const prisma = new PrismaClient()
 
@@ -93,6 +94,7 @@ async function main(): Promise<void> {
 
   await seedSuperAdminWorld(prisma, passwordHash)
   await seedDemoMeetings(prisma)
+  await seedEmployee2Dashboard(prisma, passwordHash)
 
   console.log('✅ Seeding completed successfully')
   console.log('👤 SUPER ADMIN LOGIN:')
@@ -101,6 +103,7 @@ async function main(): Promise<void> {
   console.log('')
   console.log('👤 CEO TENANTS: ceo.tnt01@mailinator.com … ceo.tnt20@mailinator.com (Admin@123)')
   console.log('📅 Demo MEETING rows seeded per company — visible under Admin → Meetings after login.')
+  console.log('👤 Employee2 demo: employee2@mailinator.com (Admin@123) — /user dashboard charts')
 }
 
 main()

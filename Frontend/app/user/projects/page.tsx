@@ -30,7 +30,6 @@ import {
   DollarSign,
   User
 } from 'lucide-react';
-import Sidebar from '../_components/sidebar_u';
 import { projectService, Project } from '@/app/services/projectService';
 import { authService } from '@/app/services/authService';
 
@@ -134,13 +133,10 @@ export default function UserProjectsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Sidebar />
-        <div className="lg:ml-16 min-h-screen pt-16 lg:pt-0">
-          <div className="p-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-PRIMAry"></div>
-            </div>
+      <div className="min-h-[50vh]" style={{ backgroundColor: 'var(--bg-color)' }}>
+        <div className="p-6">
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-[var(--PRIMAry-color)]" />
           </div>
         </div>
       </div>
@@ -148,25 +144,39 @@ export default function UserProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="lg:ml-16 min-h-screen pt-16 lg:pt-0">
-        <div className="border-b border-gray-200 bg-white px-4 sm:px-6 py-4 sticky top-0 z-10">
-          <h1 className="text-2xl font-bold text-gray-900">My Projects</h1>
-          <p className="text-gray-600 mt-1">View projects you're assigned to</p>
+    <div className="min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-color)' }}>
+      <div>
+        <div
+          className="sticky top-0 z-10 border-b px-4 py-4 sm:px-6"
+          style={{
+            backgroundColor: 'var(--card-bg)',
+            borderColor: 'var(--card-border)',
+          }}
+        >
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>My Projects</h1>
+          <p className="mt-1" style={{ color: 'var(--text-muted)' }}>View projects you&apos;re assigned to</p>
           <div className="mt-2 flex items-center space-x-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <span
+              className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+              style={{
+                backgroundColor: 'var(--PRIMAry-subtle)',
+                color: 'var(--PRIMAry-color)',
+              }}
+            >
               EMPLOYEE
             </span>
-            <span className="text-sm text-gray-500">View Only</span>
+            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>View Only</span>
           </div>
         </div>
 
         <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
           {/* Search and Filter */}
           <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <div className="relative max-w-md flex-1">
+              <Search
+                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform"
+                style={{ color: 'var(--text-muted)' }}
+              />
               <Input
                 type="text"
                 placeholder="Search projects..."
@@ -192,11 +202,14 @@ export default function UserProjectsPage() {
           {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
-              <Card key={project.id} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={project.id}
+                className="border-[var(--card-border)] bg-[var(--card-bg)] transition-shadow hover:shadow-lg"
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <FolderOpen className="w-5 h-5 text-blue-600" />
+                      <FolderOpen className="h-5 w-5" style={{ color: 'var(--accent-color)' }} />
                       <Badge className={getStatusColor(project.status)}>
                         {project.status.replace('_', ' ')}
                       </Badge>
@@ -209,7 +222,7 @@ export default function UserProjectsPage() {
                       <Eye className="w-4 h-4" />
                     </Button>
                   </div>
-                  <CardTitle className="text-lg">{project.name}</CardTitle>
+                  <CardTitle className="text-lg" style={{ color: 'var(--text-color)' }}>{project.name}</CardTitle>
                   <CardDescription className="text-sm">
                     {project.description}
                   </CardDescription>
@@ -219,8 +232,10 @@ export default function UserProjectsPage() {
                   {/* Progress */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Progress</span>
-                      <span className="font-medium">{project.stats?.progressPercentage || 0}%</span>
+                      <span style={{ color: 'var(--text-muted)' }}>Progress</span>
+                      <span className="font-medium" style={{ color: 'var(--text-color)' }}>
+                        {project.stats?.progressPercentage || 0}%
+                      </span>
                     </div>
                     <Progress value={project.stats?.progressPercentage || 0} className="h-2" />
                   </div>
@@ -228,12 +243,12 @@ export default function UserProjectsPage() {
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">{project.stats?.teamMembersCount || 0} members</span>
+                      <Users className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+                      <span style={{ color: 'var(--text-muted)' }}>{project.stats?.teamMembersCount || 0} members</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Target className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">
+                      <Target className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+                      <span style={{ color: 'var(--text-muted)' }}>
                         {project.stats?.completedTasks || 0}/{project.stats?.totalTasks || 0} tasks
                       </span>
                     </div>
@@ -241,8 +256,8 @@ export default function UserProjectsPage() {
 
                   {/* Timeline */}
                   {project.endDate && (
-                    <div className="pt-2 border-t">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="border-t pt-2" style={{ borderColor: 'var(--card-border)' }}>
+                      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
                         <Calendar className="w-4 h-4" />
                         <span>Due: {projectService.formatDate(project.endDate)}</span>
                       </div>
@@ -251,8 +266,8 @@ export default function UserProjectsPage() {
 
                   {/* Budget */}
                   {project.budget && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <DollarSign className="w-4 h-4" />
+                    <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                      <DollarSign className="h-4 w-4" />
                       <span>Budget: ${project.budget.toLocaleString()}</span>
                     </div>
                   )}
@@ -263,10 +278,10 @@ export default function UserProjectsPage() {
 
           {/* Empty State */}
           {filteredProjects.length === 0 && (
-            <div className="text-center py-12">
-              <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-              <p className="text-gray-600">
+            <div className="py-12 text-center">
+              <FolderOpen className="mx-auto mb-4 h-12 w-12" style={{ color: 'var(--text-muted)' }} />
+              <h3 className="mb-2 text-lg font-medium" style={{ color: 'var(--text-color)' }}>No projects found</h3>
+              <p style={{ color: 'var(--text-muted)' }}>
                 {searchTerm || statusFilter !== 'all' 
                   ? 'Try adjusting your search or filter criteria' 
                   : projects.length === 0
@@ -292,48 +307,48 @@ export default function UserProjectsPage() {
               {selectedProject && (
                 <div className="space-y-6">
                   {/* Project Info */}
-                  <Card>
+                  <Card className="border-[var(--card-border)] bg-[var(--card-bg)]">
                     <CardHeader>
-                      <CardTitle className="text-base">Project Information</CardTitle>
+                      <CardTitle className="text-base" style={{ color: 'var(--text-color)' }}>Project Information</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
-                        <span className="font-medium">Code:</span>
-                        <p className="text-gray-600">{selectedProject.code}</p>
+                        <span className="font-medium" style={{ color: 'var(--text-color)' }}>Code:</span>
+                        <p style={{ color: 'var(--text-muted)' }}>{selectedProject.code}</p>
                       </div>
                       <div>
-                        <span className="font-medium">Status:</span>
+                        <span className="font-medium" style={{ color: 'var(--text-color)' }}>Status:</span>
                         <Badge className={getStatusColor(selectedProject.status)}>
                           {selectedProject.status.replace('_', ' ')}
                         </Badge>
                       </div>
                       <div>
-                        <span className="font-medium">Owner:</span>
-                        <p className="text-gray-600">{selectedProject.owner?.name}</p>
+                        <span className="font-medium" style={{ color: 'var(--text-color)' }}>Owner:</span>
+                        <p style={{ color: 'var(--text-muted)' }}>{selectedProject.owner?.name}</p>
                       </div>
                       <div>
-                        <span className="font-medium">Department:</span>
-                        <p className="text-gray-600">{selectedProject.department?.name}</p>
+                        <span className="font-medium" style={{ color: 'var(--text-color)' }}>Department:</span>
+                        <p style={{ color: 'var(--text-muted)' }}>{selectedProject.department?.name}</p>
                       </div>
                       {selectedProject.startDate && (
                         <div>
-                          <span className="font-medium">Start Date:</span>
-                          <p className="text-gray-600">{projectService.formatDate(selectedProject.startDate)}</p>
+                          <span className="font-medium" style={{ color: 'var(--text-color)' }}>Start Date:</span>
+                          <p style={{ color: 'var(--text-muted)' }}>{projectService.formatDate(selectedProject.startDate)}</p>
                         </div>
                       )}
                       {selectedProject.endDate && (
                         <div>
-                          <span className="font-medium">End Date:</span>
-                          <p className="text-gray-600">{projectService.formatDate(selectedProject.endDate)}</p>
+                          <span className="font-medium" style={{ color: 'var(--text-color)' }}>End Date:</span>
+                          <p style={{ color: 'var(--text-muted)' }}>{projectService.formatDate(selectedProject.endDate)}</p>
                         </div>
                       )}
                     </CardContent>
                   </Card>
 
                   {/* Team Members */}
-                  <Card>
+                  <Card className="border-[var(--card-border)] bg-[var(--card-bg)]">
                     <CardHeader>
-                      <CardTitle className="text-base flex items-center justify-between">
+                      <CardTitle className="flex items-center justify-between text-base" style={{ color: 'var(--text-color)' }}>
                         Team Members
                         <Badge variant="outline">{selectedProject.members?.length || 0} members</Badge>
                       </CardTitle>
@@ -341,14 +356,21 @@ export default function UserProjectsPage() {
                     <CardContent>
                       <div className="space-y-3">
                         {selectedProject.members?.map((member) => (
-                          <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div
+                            key={member.id}
+                            className="flex items-center justify-between rounded-lg border p-3"
+                            style={{ borderColor: 'var(--card-border)' }}
+                          >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                <User className="w-4 h-4 text-blue-600" />
+                              <div
+                                className="flex h-8 w-8 items-center justify-center rounded-full"
+                                style={{ backgroundColor: 'var(--PRIMAry-subtle)' }}
+                              >
+                                <User className="h-4 w-4" style={{ color: 'var(--PRIMAry-color)' }} />
                               </div>
                               <div>
-                                <p className="font-medium">{member.employee.name}</p>
-                                <p className="text-sm text-gray-500">
+                                <p className="font-medium" style={{ color: 'var(--text-color)' }}>{member.employee.name}</p>
+                                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                                   {member.employee.designation} • {member.employee.employeeCode}
                                 </p>
                               </div>

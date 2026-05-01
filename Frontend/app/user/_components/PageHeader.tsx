@@ -21,7 +21,13 @@ export default function PageHeader({
   const router = useRouter();
 
   return (
-    <div className="border-b border-gray-200 bg-white px-6 py-4">
+    <div
+      className="border-b px-6 py-4"
+      style={{
+        backgroundColor: 'var(--card-bg)',
+        borderBottom: '1px solid var(--card-border)',
+      }}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           {showBackButton && (
@@ -29,15 +35,15 @@ export default function PageHeader({
               variant="ghost"
               size="sm"
               onClick={() => router.back()}
-              className="hover:bg-gray-100"
+              className="hover:bg-[var(--bg-subtle)]"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>{title}</h1>
             {subtitle && (
-              <p className="text-gray-600 mt-1">{subtitle}</p>
+              <p className="mt-1" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>
             )}
           </div>
         </div>

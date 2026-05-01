@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Textarea } from '@/components/ui/textarea';
-import Sidebar from "../_components/sidebar_u";
 import { 
   Calendar, 
   Clock, 
@@ -109,27 +107,33 @@ export default function EmployeeLeaveManagement() {
   const tabCounts = getTabCounts();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      
-      {/* Main content with proper offset for sidebar - 64px (16 * 4) on desktop */}
-      <div className="lg:ml-16 min-h-screen pt-16 lg:pt-0">
+    <div className="min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-color)' }}>
+      <div>
         {/* Page Header */}
-        <div className="border-b border-gray-200 bg-white px-4 sm:px-6 py-4 sticky top-0 z-10">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div
+          className="sticky top-0 z-10 border-b px-4 py-4 sm:px-6"
+          style={{
+            backgroundColor: 'var(--card-bg)',
+            borderColor: 'var(--card-border)',
+          }}
+        >
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Leave Management</h1>
-              <p className="text-gray-600 mt-1">Apply for leave and track your applications</p>
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>My Leave Management</h1>
+              <p className="mt-1" style={{ color: 'var(--text-muted)' }}>Apply for leave and track your applications</p>
               <div className="mt-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span
+                  className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: 'var(--PRIMAry-subtle)',
+                    color: 'var(--PRIMAry-color)',
+                  }}
+                >
                   EMPLOYEE
                 </span>
               </div>
             </div>
-            <Button
-              onClick={() => setShowApplyModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
+            <Button onClick={() => setShowApplyModal(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Apply for Leave
             </Button>
@@ -139,21 +143,33 @@ export default function EmployeeLeaveManagement() {
         {/* Leave Management Content */}
         <div className="p-4 sm:p-6 max-w-7xl mx-auto">
           {error && (
-            <Alert className="mb-4 border-red-200 bg-red-50">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">{error}</AlertDescription>
+            <Alert
+              className="mb-4 border"
+              style={{
+                borderColor: 'var(--card-border)',
+                backgroundColor: 'color-mix(in srgb, var(--signal-negative) 10%, var(--card-bg))',
+              }}
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" style={{ color: 'var(--signal-negative)' }} />
+              <AlertDescription style={{ color: 'var(--text-color)' }}>{error}</AlertDescription>
             </Alert>
           )}
 
           {success && (
-            <Alert className="mb-4 border-green-200 bg-green-50">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">{success}</AlertDescription>
+            <Alert
+              className="mb-4 border"
+              style={{
+                borderColor: 'var(--card-border)',
+                backgroundColor: 'color-mix(in srgb, var(--signal-positive) 10%, var(--card-bg))',
+              }}
+            >
+              <CheckCircle className="h-4 w-4 shrink-0" style={{ color: 'var(--signal-positive)' }} />
+              <AlertDescription style={{ color: 'var(--text-color)' }}>{success}</AlertDescription>
             </Alert>
           )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="mb-6 grid w-full grid-cols-2 gap-1 sm:grid-cols-4">
               <TabsTrigger value="all">All ({tabCounts.all})</TabsTrigger>
               <TabsTrigger value="pending">Pending ({tabCounts.pending})</TabsTrigger>
               <TabsTrigger value="approved">Approved ({tabCounts.approved})</TabsTrigger>
@@ -161,13 +177,13 @@ export default function EmployeeLeaveManagement() {
             </TabsList>
 
             <TabsContent value={activeTab}>
-              <Card>
+              <Card className="border-[var(--card-border)] bg-[var(--card-bg)]">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2" style={{ color: 'var(--text-color)' }}>
                     <Calendar className="w-5 h-5" />
                     My Leave Applications
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription style={{ color: 'var(--text-muted)' }}>
                     {activeTab === 'all' && 'All your leave applications'}
                     {activeTab === 'pending' && 'Leave applications awaiting approval'}
                     {activeTab === 'approved' && 'Your approved leave applications'}
@@ -176,17 +192,14 @@ export default function EmployeeLeaveManagement() {
                 </CardHeader>
                 <CardContent>
                   {loading ? (
-                    <div className="flex items-center justify-center h-32">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <div className="flex h-32 items-center justify-center">
+                      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-[var(--PRIMAry-color)]" />
                     </div>
                   ) : filteredLeaves.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No leave applications found</p>
-                      <Button
-                        onClick={() => setShowApplyModal(true)}
-                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
-                      >
+                    <div className="py-8 text-center">
+                      <Calendar className="mx-auto mb-4 h-12 w-12" style={{ color: 'var(--text-muted)' }} />
+                      <p style={{ color: 'var(--text-muted)' }}>No leave applications found</p>
+                      <Button onClick={() => setShowApplyModal(true)} className="mt-4">
                         <Plus className="w-4 h-4 mr-2" />
                         Apply for Leave
                       </Button>
@@ -194,45 +207,49 @@ export default function EmployeeLeaveManagement() {
                   ) : (
                     <div className="space-y-4">
                       {filteredLeaves.map((leave) => (
-                        <div 
-                          key={leave.id} 
-                          className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                        <div
+                          key={leave.id}
+                          className="rounded-lg border p-4 transition-shadow hover:shadow-md"
+                          style={{
+                            borderColor: 'var(--card-border)',
+                            backgroundColor: 'var(--bg-subtle)',
+                          }}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-3">
-                                <h3 className="font-medium text-lg">
+                              <div className="mb-3 flex items-center gap-3">
+                                <h3 className="text-lg font-medium" style={{ color: 'var(--text-color)' }}>
                                   {leaveService.formatLeaveType(leave.type)}
                                 </h3>
                                 {getStatusBadge(leave.status)}
                               </div>
                               
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                              <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3" style={{ color: 'var(--text-muted)' }}>
                                 <div>
-                                  <span className="font-medium text-gray-900">Duration:</span>
+                                  <span className="font-medium" style={{ color: 'var(--text-color)' }}>Duration:</span>
                                   <br />
                                   {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
                                   <br />
-                                  <span className="text-xs text-gray-500">
+                                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                                     ({leaveService.calculateLeaveDays(leave.startDate, leave.endDate)} days)
                                   </span>
                                 </div>
                                 
                                 <div>
-                                  <span className="font-medium text-gray-900">Applied:</span>
+                                  <span className="font-medium" style={{ color: 'var(--text-color)' }}>Applied:</span>
                                   <br />
                                   {new Date(leave.createdAt).toLocaleDateString()}
                                 </div>
                                 
                                 {leave.approvedBy && (
                                   <div>
-                                    <span className="font-medium text-gray-900">
+                                    <span className="font-medium" style={{ color: 'var(--text-color)' }}>
                                       {leave.status === 'APPROVED' ? 'Approved by:' : 'Rejected by:'}
                                     </span>
                                     <br />
                                     {leave.approvedBy}
                                     <br />
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                                       on {new Date(leave.updatedAt).toLocaleDateString()}
                                     </span>
                                   </div>
@@ -240,9 +257,15 @@ export default function EmployeeLeaveManagement() {
                               </div>
 
                               {leave.reason && (
-                                <div className="mt-3 p-3 bg-gray-50 rounded-md">
-                                  <span className="font-medium text-gray-900">Reason:</span>
-                                  <p className="text-sm text-gray-700 mt-1">{leave.reason}</p>
+                                <div
+                                  className="mt-3 rounded-md border p-3"
+                                  style={{
+                                    borderColor: 'var(--card-border)',
+                                    backgroundColor: 'var(--input-bg)',
+                                  }}
+                                >
+                                  <span className="font-medium" style={{ color: 'var(--text-color)' }}>Reason:</span>
+                                  <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{leave.reason}</p>
                                 </div>
                               )}
                             </div>
@@ -303,25 +326,51 @@ function ApplyLeaveModal({ onClose, onSuccess }: { onClose: () => void; onSucces
     }
   };
 
+  const fieldClass =
+    'w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--PRIMAry-color)] focus:ring-offset-1 focus:ring-offset-[var(--card-bg)]';
+  const fieldStyle: CSSProperties = {
+    backgroundColor: 'var(--input-bg)',
+    borderColor: 'var(--card-border)',
+    color: 'var(--text-color)',
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 className="text-2xl font-bold mb-4">Apply for Leave</h2>
-        
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'var(--sidebar-overlay-scrim)' }}
+    >
+      <div
+        className="mx-auto w-full max-w-md rounded-lg border p-6 shadow-lg"
+        style={{
+          backgroundColor: 'var(--card-bg)',
+          borderColor: 'var(--card-border)',
+        }}
+      >
+        <h2 className="mb-4 text-2xl font-bold" style={{ color: 'var(--text-color)' }}>Apply for Leave</h2>
+
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <span className="text-sm text-red-800">{error}</span>
+          <div
+            className="mb-4 flex items-start gap-2 rounded-lg border p-3"
+            style={{
+              borderColor: 'var(--card-border)',
+              backgroundColor: 'color-mix(in srgb, var(--signal-negative) 12%, var(--card-bg))',
+            }}
+          >
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" style={{ color: 'var(--signal-negative)' }} />
+            <span className="text-sm" style={{ color: 'var(--text-color)' }}>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
+            <label className="mb-1 block text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+              Leave Type
+            </label>
             <select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className={fieldClass}
+              style={fieldStyle}
               required
             >
               <option value="CASUAL">Casual Leave</option>
@@ -332,63 +381,63 @@ function ApplyLeaveModal({ onClose, onSuccess }: { onClose: () => void; onSucces
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <label className="mb-1 block text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+              Start Date
+            </label>
             <input
               type="date"
               value={formData.startDate}
               onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className={fieldClass}
+              style={fieldStyle}
               required
               min={new Date().toISOString().split('T')[0]}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <label className="mb-1 block text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+              End Date
+            </label>
             <input
               type="date"
               value={formData.endDate}
               onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className={fieldClass}
+              style={fieldStyle}
               required
               min={formData.startDate || new Date().toISOString().split('T')[0]}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label>
+            <label className="mb-1 block text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+              Reason (Optional)
+            </label>
             <textarea
               value={formData.reason}
               onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+              className={`${fieldClass} resize-none`}
+              style={fieldStyle}
               rows={3}
               placeholder="Enter reason for leave..."
             />
           </div>
 
           <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              disabled={submitting}
-            >
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={submitting}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={submitting}
-            >
+            </Button>
+            <Button type="submit" className="flex-1" disabled={submitting}>
               {submitting ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   Submitting...
-                </div>
+                </span>
               ) : (
                 'Submit Application'
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

@@ -1,14 +1,12 @@
 "use client";
 
 import React from 'react';
-import Sidebar from '../_components/sidebar_u';
 import { AttendancePage } from './pages/AttendancePage';
 
 export default function UserAttendancePage() {
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-color)' }}>
-      <Sidebar />
-      <main className="flex-1 min-w-0 pt-[57px] lg:pt-0">
+    <div className="min-w-0" style={{ backgroundColor: 'var(--bg-color)' }}>
+      <main className="min-w-0">
         <div className="px-4 sm:px-6 py-4 sticky top-0 z-10"
           style={{ backgroundColor: 'var(--card-bg)', borderBottom: '1px solid var(--card-border)' }}>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>My Attendance</h1>

@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import Sidebar from "../_components/sidebar_u";
 import Banner from "../_components/Banner";
 import { 
   Calendar, 
@@ -172,9 +171,8 @@ export default function LeavePage() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1">
+    <div className="min-h-screen">
+      <main className="min-w-0">
         <Banner />
         <div className="p-6">
           <div className="mb-6">

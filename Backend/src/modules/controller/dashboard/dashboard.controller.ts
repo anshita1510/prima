@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../../../config/db';
 import { AuthUser } from '../../../types/express';
 import { Role } from '@prisma/client';
+import { EmployeeDashboardService } from '../../services/employee-dashboard.service';
 
 export class DashboardController {
   /**
@@ -533,6 +534,30 @@ export class DashboardController {
         success: false,
         message: 'Failed to fetch recent activity',
         error: error.message
+      });
+    }
+  }
+
+  /**
+   * Employee /user dashboard — tasks, attendance, time (requires employee + company on token).
+   */
+  async getEmployeeDashboard(req: Request, res: Response) {
+    try {
+      const user = req.user as AuthUser;
+      if (!user.employeeId || !user.companyId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Employee profile required for this dashboard.',
+        });
+      }
+      const svc = new EmployeeDashboardService();
+      const data = await svc.getEmployeeDashboard(user.employeeId, user.companyId);
+      return res.json({ success: true, data });
+    } catch (error: any) {
+      console.error('Employee dashboard error:', error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to load employee dashboard',
       });
     }
   }

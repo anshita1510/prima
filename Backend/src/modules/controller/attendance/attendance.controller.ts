@@ -122,20 +122,7 @@ class AttendanceController {
       
       let history;
       if (isToday) {
-        // Get only today's attendance
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        history = await attendanceService.getPersonalAttendanceHistory(
-          employeeId,
-          today,
-          tomorrow
-        );
-        
-        // Return single record or null
-        const todayRecord = history.length > 0 ? history[0] : null;
+        const todayRecord = await attendanceService.getTodayAttendanceRecord(employeeId);
         return res.status(200).json({
           success: true,
           data: todayRecord

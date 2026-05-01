@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import Sidebar from '../_components/sidebar_u';
 import {
   CheckSquare,
   Clock,
@@ -215,19 +214,15 @@ export default function UserTasksPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-color)' }}>
-        <Sidebar />
-        <main className="flex-1 min-w-0 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#3b82f6' }} />
-        </main>
+      <div className="flex min-h-[50vh] items-center justify-center" style={{ backgroundColor: 'var(--bg-color)' }}>
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-[var(--PRIMAry-color)]" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-color)' }}>
-      <Sidebar />
-      <main className="flex-1 min-w-0 overflow-hidden">
+    <div className="min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-color)' }}>
+      <main className="min-w-0 overflow-hidden">
         {/* Header Section */}
         <div className="px-8 py-6 sticky top-0 z-10"
           style={{ backgroundColor: 'var(--card-bg)', borderBottom: '1px solid var(--card-border)' }}>
@@ -255,65 +250,73 @@ export default function UserTasksPage() {
         <div className="p-8">
           <div className="max-w-7xl mx-auto space-y-8">
             {error && (
-              <Alert className="border-yellow-200 bg-yellow-50">
-                <AlertCircle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription className="text-yellow-800">{error}</AlertDescription>
+              <Alert
+                className="border border-[var(--card-border)] bg-[var(--bg-subtle)]"
+                style={{ color: 'var(--text-color)' }}
+              >
+                <AlertCircle className="h-4 w-4 shrink-0" style={{ color: 'var(--accent-color)' }} />
+                <AlertDescription style={{ color: 'var(--text-muted)' }}>{error}</AlertDescription>
               </Alert>
             )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="border-[var(--card-border)] bg-[var(--card-bg)] transition-shadow hover:shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-600">Total Tasks</p>
-                      <p className="text-3xl font-bold text-gray-900">{tasks.length}</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Total Tasks</p>
+                      <p className="text-3xl font-bold" style={{ color: 'var(--text-color)' }}>{tasks.length}</p>
                     </div>
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <CheckSquare className="w-7 h-7 text-blue-600" />
+                    <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--accent-subtle)' }}>
+                      <CheckSquare className="h-7 w-7" style={{ color: 'var(--accent-color)' }} />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="border-[var(--card-border)] bg-[var(--card-bg)] transition-shadow hover:shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-600">In Progress</p>
-                      <p className="text-3xl font-bold text-orange-600">{tabCounts.inProgress}</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>In Progress</p>
+                      <p className="text-3xl font-bold" style={{ color: 'var(--PRIMAry-color)' }}>{tabCounts.inProgress}</p>
                     </div>
-                    <div className="p-3 bg-orange-100 rounded-lg">
-                      <TrendingUp className="w-7 h-7 text-orange-600" />
+                    <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--PRIMAry-subtle)' }}>
+                      <TrendingUp className="h-7 w-7" style={{ color: 'var(--PRIMAry-color)' }} />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="border-[var(--card-border)] bg-[var(--card-bg)] transition-shadow hover:shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-600">Completed</p>
-                      <p className="text-3xl font-bold text-green-600">{tabCounts.completed}</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Completed</p>
+                      <p className="text-3xl font-bold" style={{ color: 'var(--signal-positive)' }}>{tabCounts.completed}</p>
                     </div>
-                    <div className="p-3 bg-green-100 rounded-lg">
-                      <CheckSquare className="w-7 h-7 text-green-600" />
+                    <div
+                      className="rounded-lg p-3"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--signal-positive) 18%, transparent)',
+                      }}
+                    >
+                      <CheckSquare className="h-7 w-7" style={{ color: 'var(--signal-positive)' }} />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="border-[var(--card-border)] bg-[var(--card-bg)] transition-shadow hover:shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-600">Projects</p>
-                      <p className="text-3xl font-bold text-purple-600">{projects.length}</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Projects</p>
+                      <p className="text-3xl font-bold" style={{ color: 'var(--PRIMAry-color)' }}>{projects.length}</p>
                     </div>
-                    <div className="p-3 bg-purple-100 rounded-lg">
-                      <FolderOpen className="w-7 h-7 text-purple-600" />
+                    <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--PRIMAry-subtle)' }}>
+                      <FolderOpen className="h-7 w-7" style={{ color: 'var(--PRIMAry-color)' }} />
                     </div>
                   </div>
                 </CardContent>
@@ -322,7 +325,7 @@ export default function UserTasksPage() {
 
             {/* Tasks Section */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 h-12 mb-8">
+              <TabsList className="mb-8 grid h-auto min-h-12 w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-5">
                 <TabsTrigger value="all" className="text-sm font-medium">
                   All ({tabCounts.all})
                 </TabsTrigger>
@@ -341,9 +344,9 @@ export default function UserTasksPage() {
               </TabsList>
 
               <TabsContent value={activeTab} className="mt-0">
-                <Card>
+                <Card className="border-[var(--card-border)] bg-[var(--card-bg)]">
                   <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center gap-2 text-xl">
+                    <CardTitle className="flex items-center gap-2 text-xl" style={{ color: 'var(--text-color)' }}>
                       <CheckSquare className="w-5 h-5" />
                       {activeTab === 'all' && 'All Tasks'}
                       {activeTab === 'todo' && 'To Do Tasks'}
@@ -351,7 +354,7 @@ export default function UserTasksPage() {
                       {activeTab === 'in-review' && 'In Review Tasks'}
                       {activeTab === 'completed' && 'Completed Tasks'}
                     </CardTitle>
-                    <CardDescription className="text-sm">
+                    <CardDescription className="text-sm" style={{ color: 'var(--text-muted)' }}>
                       {activeTab === 'all' && 'All your assigned tasks across all projects'}
                       {activeTab === 'todo' && 'Tasks waiting to be started'}
                       {activeTab === 'in-progress' && 'Tasks you are currently working on'}
@@ -361,11 +364,14 @@ export default function UserTasksPage() {
                   </CardHeader>
                   <CardContent className="pt-0">
                     {filteredTasks.length === 0 ? (
-                      <div className="text-center py-16">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                          <CheckSquare className="w-8 h-8 text-gray-400" />
+                      <div className="py-16 text-center">
+                        <div
+                          className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full"
+                          style={{ backgroundColor: 'var(--bg-subtle)' }}
+                        >
+                          <CheckSquare className="h-8 w-8" style={{ color: 'var(--text-muted)' }} />
                         </div>
-                        <p className="text-gray-500 text-base">
+                        <p className="text-base" style={{ color: 'var(--text-muted)' }}>
                           {activeTab === 'all' ? 'No tasks assigned to you yet' : `No ${activeTab.replace('-', ' ')} tasks`}
                         </p>
                       </div>
@@ -374,18 +380,27 @@ export default function UserTasksPage() {
                         {filteredTasks.map((task) => (
                           <div
                             key={task.id}
-                            className="border rounded-xl p-6 hover:shadow-lg transition-all duration-200 bg-white"
+                            className="rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] p-6 transition-all duration-200 hover:shadow-lg"
                           >
                             <div className="space-y-4">
                               {/* Task Header */}
                               <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-semibold text-lg text-gray-900 mb-2">{task.title}</h3>
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-color)' }}>
+                                    {task.title}
+                                  </h3>
                                   <div className="flex flex-wrap items-center gap-2">
                                     {getStatusBadge(task.status)}
                                     {getPriorityBadge(task.priority)}
                                     {isOverdue(task.dueDate) && (
-                                      <Badge className="bg-red-100 text-red-800 border-0">
+                                      <Badge
+                                        className="border-0"
+                                        style={{
+                                          backgroundColor:
+                                            'color-mix(in srgb, var(--signal-negative) 16%, transparent)',
+                                          color: 'var(--signal-negative)',
+                                        }}
+                                      >
                                         <AlertCircle className="w-3 h-3 mr-1" />
                                         Overdue
                                       </Badge>
@@ -396,27 +411,32 @@ export default function UserTasksPage() {
 
                               {/* Task Description */}
                               {task.description && (
-                                <p className="text-sm text-gray-600 leading-relaxed">{task.description}</p>
+                                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                                  {task.description}
+                                </p>
                               )}
 
                               {/* Task Metadata */}
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-3 border-y border-gray-100">
+                              <div
+                                className="grid grid-cols-1 gap-4 border-y py-3 md:grid-cols-3"
+                                style={{ borderColor: 'var(--card-border)' }}
+                              >
                                 {task.project && (
-                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
                                     <FolderOpen className="w-4 h-4 flex-shrink-0" />
                                     <span className="truncate">{task.project.name}</span>
                                   </div>
                                 )}
 
                                 {task.dueDate && (
-                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
                                     <Calendar className="w-4 h-4 flex-shrink-0" />
                                     <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
                                   </div>
                                 )}
 
                                 {task.createdBy && (
-                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
                                     <User className="w-4 h-4 flex-shrink-0" />
                                     <span className="truncate">By: {task.createdBy.name}</span>
                                   </div>
@@ -426,16 +446,18 @@ export default function UserTasksPage() {
                               {/* Progress Bar */}
                               {task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && (
                                 <div className="space-y-2">
-                                  <div className="flex justify-between items-center text-sm">
-                                    <span className="text-gray-600 font-medium">Progress</span>
-                                    <span className="font-semibold text-gray-900">{task.progressPercentage}%</span>
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="font-medium" style={{ color: 'var(--text-muted)' }}>Progress</span>
+                                    <span className="font-semibold" style={{ color: 'var(--text-color)' }}>
+                                      {task.progressPercentage}%
+                                    </span>
                                   </div>
                                   <Progress value={task.progressPercentage} className="h-2.5" />
                                 </div>
                               )}
 
                               {/* Task Footer */}
-                              <div className="flex items-center justify-between text-xs text-gray-500 pt-2">
+                              <div className="flex items-center justify-between pt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                                 <span className="font-medium">
                                   {task.code ? `Task Code: ${task.code}` : 'No task code'}
                                 </span>

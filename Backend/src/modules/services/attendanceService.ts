@@ -51,10 +51,64 @@ interface AttendanceCorrectionData {
 }
 
 class AttendanceService {
+  /** Local calendar day start [00:00, next 00:00). */
+  private localDayBounds(ref: Date = new Date()): { dayStart: Date; dayEnd: Date } {
+    const dayStart = new Date(ref);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+    return { dayStart, dayEnd };
+  }
+
+  /**
+   * One row for the employee's local calendar day (latest `updatedAt` wins).
+   * Handles legacy rows where `date` was stored at midday instead of midnight.
+   */
+  async getTodayAttendanceRecord(employeeId: number, ref: Date = new Date()) {
+    const { dayStart, dayEnd } = this.localDayBounds(ref);
+    return prisma.attendance.findFirst({
+      where: {
+        employeeId,
+        date: { gte: dayStart, lt: dayEnd },
+      },
+      orderBy: { updatedAt: 'desc' },
+      include: { employee: true },
+    });
+  }
+
+  private async removeDuplicateAttendanceForDay(
+    employeeId: number,
+    keepId: number,
+    ref: Date = new Date()
+  ): Promise<void> {
+    const { dayStart, dayEnd } = this.localDayBounds(ref);
+    const others = await prisma.attendance.findMany({
+      where: {
+        employeeId,
+        date: { gte: dayStart, lt: dayEnd },
+        id: { not: keepId },
+      },
+    });
+    for (const row of others) {
+      const regs = await prisma.regularizationRequest.findMany({
+        where: { attendanceId: row.id },
+        select: { id: true },
+      });
+      const regIds = regs.map((r) => r.id);
+      if (regIds.length) {
+        await prisma.regularizationAuditEntry.deleteMany({
+          where: { requestId: { in: regIds } },
+        });
+        await prisma.regularizationRequest.deleteMany({ where: { id: { in: regIds } } });
+      }
+      await prisma.attendanceAuditEntry.deleteMany({ where: { attendanceId: row.id } });
+      await prisma.attendance.delete({ where: { id: row.id } });
+    }
+  }
+
   // Personal Attendance Methods
   async checkIn(data: CheckInData, req: Request) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const { dayStart, dayEnd } = this.localDayBounds();
 
     // Get employee details first
     const employee = await prisma.employee.findUnique({
@@ -66,14 +120,12 @@ class AttendanceService {
       throw new Error('Employee not found');
     }
 
-    // Get existing attendance for today
-    const existingAttendance = await prisma.attendance.findUnique({
+    const existingAttendance = await prisma.attendance.findFirst({
       where: {
-        employeeId_date: {
-          employeeId: data.employeeId,
-          date: today
-        }
-      }
+        employeeId: data.employeeId,
+        date: { gte: dayStart, lt: dayEnd },
+      },
+      orderBy: { updatedAt: 'desc' },
     });
 
     const checkInTime = new Date();
@@ -105,6 +157,7 @@ class AttendanceService {
       const attendance = await prisma.attendance.update({
         where: { id: existingAttendance.id },
         data: {
+          date: dayStart,
           timeSlots: timeSlots,
           status,
           location: data.location,
@@ -124,6 +177,7 @@ class AttendanceService {
         reason: 'Employee check-in (multiple)'
       });
 
+      await this.removeDuplicateAttendanceForDay(data.employeeId, attendance.id);
       return attendance;
     }
 
@@ -137,7 +191,7 @@ class AttendanceService {
         employeeId: data.employeeId,
         companyId: employee.companyId,
         departmentId: employee.departmentId,
-        date: today,
+        date: dayStart,
         checkIn: checkInTime,
         status,
         location: data.location,
@@ -160,20 +214,19 @@ class AttendanceService {
       reason: 'Employee check-in (first)'
     });
 
+    await this.removeDuplicateAttendanceForDay(data.employeeId, attendance.id);
     return attendance;
   }
 
   async checkOut(data: CheckOutData, req: Request) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const { dayStart, dayEnd } = this.localDayBounds();
 
-    const attendance = await prisma.attendance.findUnique({
+    const attendance = await prisma.attendance.findFirst({
       where: {
-        employeeId_date: {
-          employeeId: data.employeeId,
-          date: today
-        }
+        employeeId: data.employeeId,
+        date: { gte: dayStart, lt: dayEnd },
       },
+      orderBy: { updatedAt: 'desc' },
       include: {
         employee: true
       }
@@ -214,7 +267,12 @@ class AttendanceService {
     const overtime = this.calculateOvertime(totalWorkHours);
 
     // Determine final status based on first check-in and last check-out
-    const firstCheckIn = new Date(timeSlots[0].checkIn);
+    const firstCheckIn =
+      timeSlots.length && timeSlots[0]?.checkIn
+        ? new Date(timeSlots[0].checkIn)
+        : attendance.checkIn
+          ? new Date(attendance.checkIn)
+          : checkOutTime;
     const lastCheckOut = checkOutTime;
     const finalStatus = this.determineFinalAttendanceStatus(firstCheckIn, lastCheckOut);
 
@@ -225,6 +283,7 @@ class AttendanceService {
     const updatedAttendance = await prisma.attendance.update({
       where: { id: attendance.id },
       data: {
+        date: dayStart,
         checkOut: checkOutTime,
         timeSlots: timeSlots,
         workHours: totalWorkHours,
@@ -254,6 +313,7 @@ class AttendanceService {
       reason: 'Employee check-out'
     });
 
+    await this.removeDuplicateAttendanceForDay(data.employeeId, attendance.id);
     return updatedAttendance;
   }
 

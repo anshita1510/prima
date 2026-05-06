@@ -1,0 +1,85 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                    WHERE IS MY OTP? 🔍                           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+✅ EMAIL SYSTEM IS WORKING! Emails are being sent successfully.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 SOLUTION #1: CHECK BACKEND CONSOLE (EASIEST!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The OTP is printed in your backend terminal!
+
+1. Start backend:
+   $ cd Backend
+   $ npm run dev
+
+2. Request OTP from: http://localhost:3000/Forget_pass
+
+3. Look at terminal - you'll see:
+   
+   🔐 Generated OTP for your-email@example.com: 123456
+                                                 ^^^^^^
+                                            YOUR OTP HERE!
+
+4. Copy and use it!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📧 SOLUTION #2: CHECK SPAM FOLDER (MOST LIKELY!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Gmail filters automated emails to spam!
+
+1. Open Gmail
+2. Click "Spam" in left sidebar
+3. Search for "PRIMA" or "OTP"
+4. Find email from: anshita.bharwal@signitysolutions.com
+5. Click "Not spam"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 SOLUTION #3: CHECK EMAIL INBOX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Look for:
+• From: anshita.bharwal@signitysolutions.com
+• Subject: Reset Password OTP - PRIMA
+• Content: Your OTP is: 123456
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🛠️ DEBUGGING TOOLS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Test email sending:
+$ cd Backend
+$ npx ts-node debug-email-flow.ts your-email@example.com
+
+Check OTP in database:
+$ cd Backend
+$ npx ts-node check-otp-in-db.ts your-email@example.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ QUICK CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ Backend server running?
+□ Checked backend console?
+□ Checked email inbox?
+□ Checked SPAM folder? ⚠️ (CHECK THIS!)
+□ Waited 1-2 minutes?
+□ Using correct email address?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 PRO TIP: Just use the OTP from backend console!
+   It's printed there immediately and reliably.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 MORE HELP: See SOLUTION.md for detailed guide
+
+╚══════════════════════════════════════════════════════════════════╝

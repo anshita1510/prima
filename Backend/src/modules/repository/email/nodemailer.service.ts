@@ -12,26 +12,29 @@ export class NodemailerService implements EmailService {
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT) || 587,
         secure: false,
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 8000,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
+        tls: {
+          rejectUnauthorized: false
+        }
       });
     }
     return this.transporter;
   }
 
   async sendEmail(data: SendEmailDTO): Promise<void> {
-    // Hard 10s timeout so a hanging SMTP connection never blocks the caller
+    // Hard 15s timeout so a hanging SMTP connection never blocks the caller
     const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Email send timeout')), 10000)
+      setTimeout(() => reject(new Error('Email send timeout')), 15000)
     );
 
     try {
-      await Promise.race([
+      const info = await Promise.race([
         this.getTransporter().sendMail({
           from: `"PRIMA Team" <${process.env.SMTP_USER}>`,
           to: data.to,
@@ -44,6 +47,7 @@ export class NodemailerService implements EmailService {
     } catch (error: any) {
       // Never throw — email failure must not affect user creation
       console.error('❌ Email send failed (non-fatal):', error.message);
+      console.error('Full error:', error);
     }
   }
 }

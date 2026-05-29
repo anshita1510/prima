@@ -21,6 +21,7 @@ import {
   Building2,
   Users,
   LogOut,
+  UserCircle,
 } from "lucide-react";
 import { authService } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
@@ -47,6 +48,12 @@ const NAV_SECTIONS: NavSection[] = [
         icon: LayoutGrid,
         href: "/superAdmin",
         match: "exact",
+      },
+      {
+        id: "profile",
+        name: "Profile",
+        icon: UserCircle,
+        href: "/superAdmin/profile",
       },
       {
         id: "analytics",

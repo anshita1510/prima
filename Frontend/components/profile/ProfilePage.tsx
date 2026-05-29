@@ -418,16 +418,15 @@ export default function ProfilePage({ role }: ProfilePageProps) {
           className="relative overflow-hidden rounded-2xl border bg-[var(--card-bg)] shadow-sm"
           style={{ borderColor: "var(--card-border)" }}
         >
-          <div className="h-24 bg-gradient-to-r from-indigo-500 to-purple-400 opacity-80" />
-          <div className="px-6 pb-6">
-            <div className="flex flex-wrap items-end gap-4 -mt-10">
+          <div className="px-6 py-6">
+            <div className="flex flex-wrap items-center gap-4">
               {/* Avatar */}
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-[var(--card-bg)] bg-gradient-to-br from-indigo-500 to-purple-400 text-2xl font-bold text-white shadow-md">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-400 text-xl font-bold text-white shadow-md">
                 {initials}
               </div>
 
               {/* Name + Role */}
-              <div className="flex-1 min-w-0 pt-3">
+              <div className="flex-1 min-w-0">
                 <h1 className="text-xl font-bold text-[var(--text-color)] truncate">{displayName}</h1>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center rounded-full bg-[var(--bg-subtle)] px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
@@ -440,7 +439,7 @@ export default function ProfilePage({ role }: ProfilePageProps) {
               </div>
 
               {/* Badges + Refresh */}
-              <div className="flex shrink-0 flex-wrap items-center gap-2 pt-3">
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
                 {isVerified ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                     <CheckCircle2 size={12} /> Verified

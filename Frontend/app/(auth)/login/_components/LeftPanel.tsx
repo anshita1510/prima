@@ -240,7 +240,8 @@ export default function LeftPanel() {
     setLoading(true);
     try {
       /* Step 1: check provider */
-      const checkRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/check-user`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5004';
+      const checkRes = await fetch(`${baseUrl}/api/users/check-user`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.toLowerCase().trim() }),
       });
@@ -262,7 +263,7 @@ export default function LeftPanel() {
       }
 
       /* Step 2: login */
-      const loginRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/login`, {
+      const loginRes = await fetch(`${baseUrl}/api/users/login`, {
         method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ email: email.toLowerCase().trim(), password }),
       });

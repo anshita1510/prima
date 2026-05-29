@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no testS specified\" && exit 1",
-    "dev": "nodemon -e ts --exec 'ts-node src/server.ts'",
+    "dev": "nodemon -e ts --exec \"ts-node\" src/server.ts",
     "start": "node src/server.ts",
     "prisma:migrate": "npx prisma migrate dev --name $migration_name",
     "prisma:deploy": "npx prisma migrate deploy",
@@ -20,7 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
-    "@prisma/client": "^6.19.0",
+    "@prisma/client": "^6.19.1",
     "@types/morgan": "^1.9.10",
     "@types/node-cron": "^3.0.11",
     "@types/passport": "^1.0.17",

@@ -26,6 +26,7 @@ import {
   CalendarDays,
   UserPlus,
   LogOut,
+  UserCircle,
 } from "lucide-react";
 
 type MatchMode = "exact" | "prefix";
@@ -47,6 +48,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: "Overview",
     items: [
       { id: "dashboard", name: "Dashboard", icon: LayoutGrid, href: "/admin", match: "exact" },
+      { id: "profile", name: "Profile", icon: UserCircle, href: "/admin/profile" },
       { id: "reports", name: "Reports & Analytics", icon: BarChart2, href: "/admin/reports" },
       { id: "announcements", name: "Announcements", icon: Megaphone, href: "/admin/announcements" },
       { id: "notifications", name: "Notifications", icon: BellRing, href: "/admin/notifications" },

@@ -17,6 +17,7 @@ import {
   Calendar,
   CalendarDays,
   LogOut,
+  UserCircle,
 } from "lucide-react";
 
 type MatchMode = "exact" | "prefix";
@@ -36,7 +37,10 @@ type NavSection = { title: string; items: NavItem[] };
 const USER_NAV_SECTIONS: NavSection[] = [
   {
     title: "Overview",
-    items: [{ id: "dashboard", name: "Dashboard", icon: LayoutGrid, href: "/user", match: "exact" }],
+    items: [
+      { id: "dashboard", name: "Dashboard", icon: LayoutGrid, href: "/user", match: "exact" },
+      { id: "profile", name: "Profile", icon: UserCircle, href: "/user/profile" },
+    ],
   },
   {
     title: "My work",

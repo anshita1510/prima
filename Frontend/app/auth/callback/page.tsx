@@ -30,8 +30,9 @@ export default function OAuthCallbackPage() {
       localStorage.setItem("token", token);
 
       // Fetch user data and store it
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5004';
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/users/me`,
+        `${baseUrl}/api/users/me`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

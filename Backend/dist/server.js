@@ -181,6 +181,79 @@ app.get('/api/debug/departments', async (req, res) => {
 app.use('/api/project-management', project_routes_2.default);
 // Calendar Routes
 app.use('/api/calendar', calendar_routes_1.default);
+// Temporary seed endpoint for attendance data
+app.post('/api/seed/attendance', async (req, res) => {
+    const { secret, employeeId, companyId, departmentId } = req.body;
+    if (secret !== 'prima-seed-2026') {
+        return res.status(403).json({ error: 'Forbidden' });
+    }
+    try {
+        const { PrismaClient, AttendanceStatus } = require('@prisma/client');
+        const db = new PrismaClient();
+        const today = new Date();
+        const records = [];
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            if (date.getDay() === 0 || date.getDay() === 6)
+                continue;
+            const seed = i * 7 + 3;
+            const pr = (seed % 20) / 20;
+            let status, checkIn = null, checkOut = null, workHours = null, timeSlots = null;
+            if (i === 0) {
+                status = AttendanceStatus.PRESENT;
+                checkIn = new Date(date);
+                checkIn.setHours(9, 15, 0, 0);
+                timeSlots = [{ checkIn: checkIn.toISOString(), checkOut: null }];
+            }
+            else if (pr < 0.80) {
+                status = AttendanceStatus.PRESENT;
+                checkIn = new Date(date);
+                checkIn.setHours(9, seed % 30, 0, 0);
+                checkOut = new Date(date);
+                checkOut.setHours(18, seed % 60, 0, 0);
+                workHours = 8 + (seed % 3) * 0.5;
+                timeSlots = [{ checkIn: checkIn.toISOString(), checkOut: checkOut.toISOString() }];
+            }
+            else if (pr < 0.88) {
+                status = AttendanceStatus.LATE;
+                checkIn = new Date(date);
+                checkIn.setHours(10, seed % 30, 0, 0);
+                checkOut = new Date(date);
+                checkOut.setHours(19, seed % 60, 0, 0);
+                workHours = 8;
+                timeSlots = [{ checkIn: checkIn.toISOString(), checkOut: checkOut.toISOString() }];
+            }
+            else if (pr < 0.94) {
+                status = AttendanceStatus.HALF_DAY;
+                checkIn = new Date(date);
+                checkIn.setHours(9, 0, 0, 0);
+                checkOut = new Date(date);
+                checkOut.setHours(13, 0, 0, 0);
+                workHours = 4;
+                timeSlots = [{ checkIn: checkIn.toISOString(), checkOut: checkOut.toISOString() }];
+            }
+            else {
+                status = AttendanceStatus.LEAVE;
+            }
+            records.push({ employeeId, companyId, departmentId, date, status, checkIn, checkOut, workHours, timeSlots, isLocked: i > 7 });
+        }
+        // Delete existing then recreate
+        const existing = await db.attendance.findMany({ where: { employeeId }, select: { id: true } });
+        const ids = existing.map((a) => a.id);
+        if (ids.length > 0) {
+            await db.attendanceAuditEntry.deleteMany({ where: { attendanceId: { in: ids } } });
+            await db.attendance.deleteMany({ where: { employeeId } });
+        }
+        await db.attendance.createMany({ data: records });
+        await db.$disconnect();
+        res.json({ success: true, created: records.length });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 // Error handling middleware
 app.use(validation_middleware_1.errorHandler);
 // Initialize cron jobs

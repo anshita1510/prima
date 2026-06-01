@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
@@ -497,5 +497,13 @@ export default function LeftPanel() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function LeftPanel() {
+  return (
+    <Suspense fallback={<div className="flex w-full items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <LeftPanelContent />
+    </Suspense>
   );
 }

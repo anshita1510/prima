@@ -4,7 +4,7 @@ node_modules/
 
 # Build
 .next/
-dist/
+# dist/
 build/
 
 # Env

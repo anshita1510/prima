@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_middleware_1 = require("../../middlewares/auth.middleware");
+const calendar_controller_1 = require("../controllers/calendar.controller");
+const router = (0, express_1.Router)();
+const calendarController = new calendar_controller_1.CalendarController();
+router.use(auth_middleware_1.authenticate);
+router.post('/events', calendarController.createEvent);
+router.get('/events', calendarController.getEvents);
+router.get('/events/:id', calendarController.getEventById);
+router.put('/events/:id', calendarController.updateEvent);
+router.delete('/events/:id', calendarController.deleteEvent);
+router.post('/events/:id/attendees', calendarController.addAttendees);
+router.put('/events/:id/attendees/:attendeeId/status', calendarController.updateAttendeeStatus);
+exports.default = router;
